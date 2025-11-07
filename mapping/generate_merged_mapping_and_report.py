@@ -1,231 +1,246 @@
+#!/usr/bin/env python3
 """
-generate_merged_mapping_and_report.py
--------------------------------------
-MITRE ATT&CK ↔ CAPEC 매핑 (STIX + Semantic + User CSV 병합)
+generate_full_attack_capec_mapping.py
+
+- Downloads MITRE CTI master.zip (if not already present), extracts.
+- Reads enterprise-attack JSON (or attack-pattern JSONs under enterprise-attack/) to find ATT&CK techniques.
+- Reads CAPEC attack-pattern JSONs from CTI repo (capec/2.1/attack-pattern/) to build CAPEC lookup (ID->name,description).
+- Builds mapping ATTACK_ID -> CAPEC_ID (from external_references or relationship if present) and writes CSV.
+
+Output:
+  mapping/full_attack_capec_mapping.csv
+Columns:
+  ATTACK_ID,ATTACK_NAME,CAPEC_ID,CAPEC_NAME,CAPEC_DESCRIPTION,SOURCE,RELATION_TYPE,NOTE
+
+Requirements:
+  pip install requests pandas
 """
 
 import os
-import json
 import zipfile
 import tempfile
+import json
 import requests
+from pathlib import Path
+from typing import Dict, Tuple, List
 import pandas as pd
-from tqdm import tqdm
-from sentence_transformers import SentenceTransformer, util
 
-CTI_URL = "https://github.com/mitre/cti/archive/refs/heads/master.zip"
-LOCAL_CTI_DIR = os.path.join(tempfile.gettempdir(), "mitre_cti_data")
-OUTPUT_FILE = "mapping/merged_mapping_report.csv"
-USER_CSV = "mapping/user_scenario_mapping.csv"  # 사용자 시나리오 매핑 테이블
-SEMANTIC_MAPPING_CSV = "mapping/full_attack_capec_mapping_semantic.csv"
+CTI_ZIP_URL = "https://github.com/mitre/cti/archive/refs/heads/master.zip"
+OUT_DIR = Path("mapping")
+OUT_CSV = OUT_DIR / "full_attack_capec_mapping.csv"
+TMP_PREFIX = "mitre_cti_"
 
-
-# ---------------------------------------------------------------------
-# 1️⃣ 다운로드 및 로드
-# ---------------------------------------------------------------------
-def download_cti_repo():
-    os.makedirs(LOCAL_CTI_DIR, exist_ok=True)
-    zip_path = os.path.join(LOCAL_CTI_DIR, "cti_master.zip")
-
-    if not os.path.exists(zip_path):
+def download_cti_zip(tmpdir: Path) -> Path:
+    zip_path = tmpdir / "cti_master.zip"
+    if not zip_path.exists():
         print("[+] Downloading CTI master zip...")
-        r = requests.get(CTI_URL)
+        r = requests.get(CTI_ZIP_URL, stream=True, timeout=60)
         r.raise_for_status()
-        with open(zip_path, "wb") as f:
-            f.write(r.content)
-
-    extract_dir = os.path.join(LOCAL_CTI_DIR, "cti_master")
-    if not os.path.exists(extract_dir):
-        print(f"[+] Extracting to {extract_dir} ...")
-        with zipfile.ZipFile(zip_path, "r") as zf:
-            zf.extractall(LOCAL_CTI_DIR)
-
-    return extract_dir
-
-
-# ---------------------------------------------------------------------
-# 2️⃣ MITRE ATT&CK 데이터 파싱
-# ---------------------------------------------------------------------
-def parse_attack_techniques(cti_root):
-    attack_dir = os.path.join(cti_root, "cti-master", "enterprise-attack")
-    all_json_files = []
-    for root, _, files in os.walk(attack_dir):
-        for f in files:
-            if f.endswith(".json"):
-                all_json_files.append(os.path.join(root, f))
-
-    techniques = {}
-    print(f"[+] Scanning {len(all_json_files)} ATT&CK JSON files...")
-    for file in tqdm(all_json_files):
-        try:
-            data = json.load(open(file, encoding="utf-8"))
-        except Exception:
-            continue
-        for obj in data.get("objects", []):
-            if obj.get("type") == "attack-pattern":
-                tid = None
-                for ref in obj.get("external_references", []):
-                    if ref.get("source_name") == "mitre-attack":
-                        tid = ref.get("external_id")
-                        break
-                if tid:
-                    techniques[tid] = {
-                        "id": tid,
-                        "name": obj.get("name", ""),
-                        "description": obj.get("description", ""),
-                    }
-    print(f"[+] Parsed {len(techniques)} ATT&CK techniques.")
-    return techniques
-
-
-# ---------------------------------------------------------------------
-# 3️⃣ CAPEC 데이터 로드
-# ---------------------------------------------------------------------
-def load_capec_data():
-    print("[+] Fetching CAPEC JSON ...")
-    CAPEC_URL = "https://raw.githubusercontent.com/mitre/cti/master/capec/2.1/attack-pattern/attack-pattern--a.json"
-    try:
-        r = requests.get(CAPEC_URL)
-        r.raise_for_status()
-        capec_data = json.loads(r.text)
-    except Exception as e:
-        print(f"[!] Could not fetch CAPEC JSON: {e}")
-        capec_data = {"objects": []}
-    return capec_data
-
-
-def parse_capec_objects(capec_data):
-    capecs = {}
-    for obj in capec_data.get("objects", []):
-        if obj.get("type") == "attack-pattern":
-            cid = None
-            for ref in obj.get("external_references", []):
-                if ref.get("source_name") == "capec":
-                    cid = ref.get("external_id")
-                    break
-            if cid:
-                capecs[cid] = {
-                    "id": cid,
-                    "name": obj.get("name", ""),
-                    "description": obj.get("description", ""),
-                }
-    print(f"[+] Parsed {len(capecs)} CAPEC entries.")
-    return capecs
-
-
-# ---------------------------------------------------------------------
-# 4️⃣ Semantic Matching (SBERT)
-# ---------------------------------------------------------------------
-def compute_semantic_similarity(attack_dict, capec_dict, threshold=0.6):
-    print("[+] Using Sentence-BERT for embeddings (fast & accurate).")
-    model = SentenceTransformer("sentence-transformers/all-MiniLM-L6-v2")
-
-    attack_texts = [f"{v['name']} {v['description']}" for v in attack_dict.values()]
-    capec_texts = [f"{v['name']} {v['description']}" for v in capec_dict.values()]
-
-    attack_emb = model.encode(attack_texts, convert_to_tensor=True, show_progress_bar=True)
-    capec_emb = model.encode(capec_texts, convert_to_tensor=True, show_progress_bar=True)
-
-    sim_matrix = util.cos_sim(attack_emb, capec_emb)
-
-    results = []
-    for i, a in enumerate(attack_dict.values()):
-        best_idx = int(sim_matrix[i].argmax())
-        best_sim = float(sim_matrix[i][best_idx])
-        if best_sim >= threshold:
-            c = list(capec_dict.values())[best_idx]
-            results.append(
-                {
-                    "ATTACK_ID": a["id"],
-                    "ATTACK_NAME": a["name"],
-                    "CAPEC_ID": c["id"],
-                    "CAPEC_NAME": c["name"],
-                    "SIMILARITY": round(best_sim, 4),
-                }
-            )
-    print(f"[+] Found {len(results)} semantic mappings (similarity ≥ {threshold}).")
-    return pd.DataFrame(results)
-
-
-# ---------------------------------------------------------------------
-# 5️⃣ 사용자 정의 시나리오 CSV 로드 (UTF-8/CP949 자동 감지)
-# ---------------------------------------------------------------------
-def load_user_mapping(path):
-    print(f"[+] Loading user scenario mapping from {path}")
-    try:
-        df = pd.read_csv(path, dtype=str).fillna("")
-    except UnicodeDecodeError:
-        print("[!] UTF-8 디코딩 실패 — CP949 인코딩으로 재시도합니다.")
-        df = pd.read_csv(path, dtype=str, encoding="cp949").fillna("")
-    print(f"[+] Loaded {len(df)} rows from user mapping CSV.")
-    return df
-
-
-# ---------------------------------------------------------------------
-# 6️⃣ 병합 처리
-# ---------------------------------------------------------------------
-def merge_mappings(user_df, semantic_df):
-    merged_rows = []
-    for _, row in user_df.iterrows():
-        tid = str(row.get("MITRE ATT&CK TID", "")).strip()
-        scenario = row.get("시나리오명", "")
-        desc = row.get("비고(설명)", "")
-        대응방안 = row.get("대응방안", "")
-        src = semantic_df[semantic_df["ATTACK_ID"] == tid]
-        if not src.empty:
-            best = src.iloc[0]
-            merged_rows.append(
-                {
-                    "시나리오명": scenario,
-                    "ATTACK_ID": tid,
-                    "ATTACK_NAME": best["ATTACK_NAME"],
-                    "CAPEC_ID": best["CAPEC_ID"],
-                    "CAPEC_NAME": best["CAPEC_NAME"],
-                    "SIMILARITY": best["SIMILARITY"],
-                    "비고(설명)": desc,
-                    "대응방안": 대응방안,
-                }
-            )
-        else:
-            merged_rows.append(
-                {
-                    "시나리오명": scenario,
-                    "ATTACK_ID": tid,
-                    "ATTACK_NAME": "",
-                    "CAPEC_ID": "",
-                    "CAPEC_NAME": "",
-                    "SIMILARITY": "",
-                    "비고(설명)": desc,
-                    "대응방안": 대응방안,
-                }
-            )
-    return pd.DataFrame(merged_rows)
-
-
-# ---------------------------------------------------------------------
-# 7️⃣ 실행 진입점
-# ---------------------------------------------------------------------
-def main():
-    cti_root = download_cti_repo()
-    attacks = parse_attack_techniques(cti_root)
-    capec_json = load_capec_data()
-    capecs = parse_capec_objects(capec_json)
-
-    if os.path.exists(SEMANTIC_MAPPING_CSV):
-        print(f"[+] Loading existing semantic mapping from {SEMANTIC_MAPPING_CSV}")
-        semantic_df = pd.read_csv(SEMANTIC_MAPPING_CSV)
+        with open(zip_path, "wb") as fh:
+            for chunk in r.iter_content(chunk_size=8192):
+                if chunk:
+                    fh.write(chunk)
     else:
-        semantic_df = compute_semantic_similarity(attacks, capecs, threshold=0.6)
-        os.makedirs("mapping", exist_ok=True)
-        semantic_df.to_csv(SEMANTIC_MAPPING_CSV, index=False, encoding="utf-8-sig")
+        print("[+] Using cached CTI zip:", zip_path)
+    return zip_path
 
-    user_df = load_user_mapping(USER_CSV)
-    merged_df = merge_mappings(user_df, semantic_df)
+def extract_zip(zip_path: Path, extract_to: Path) -> Path:
+    print(f"[+] Extracting {zip_path} -> {extract_to}")
+    with zipfile.ZipFile(zip_path, "r") as zf:
+        zf.extractall(extract_to)
+    # find extracted repo folder (cti-master or cti-<branch>)
+    children = [p for p in extract_to.iterdir() if p.is_dir()]
+    if children:
+        return children[0]
+    return extract_to
 
-    os.makedirs("mapping", exist_ok=True)
-    merged_df.to_csv(OUTPUT_FILE, index=False, encoding="utf-8-sig")
-    print(f"[+] Final merged mapping saved to {OUTPUT_FILE}")
+def find_enterprise_attack_json(repo_root: Path) -> List[Path]:
+    """
+    Look for enterprise-attack.json or attack-pattern jsons under enterprise-attack folder.
+    Returns list of json file paths to parse for attack-pattern objects.
+    """
+    cand = []
+    # prefer single enterprise-attack.json
+    p1 = repo_root / "enterprise-attack" / "enterprise-attack.json"
+    if p1.exists():
+        cand.append(p1)
+        return cand
+    # else collect all json files under enterprise-attack
+    ent_dir = repo_root / "enterprise-attack"
+    if ent_dir.exists():
+        for p in ent_dir.rglob("*.json"):
+            cand.append(p)
+    return cand
 
+def load_json_safe(path: Path):
+    try:
+        with open(path, "r", encoding="utf-8") as fh:
+            return json.load(fh)
+    except Exception:
+        try:
+            with open(path, "rb") as fh:
+                raw = fh.read()
+            return json.loads(raw.decode("utf-8", errors="ignore"))
+        except Exception as e:
+            print(f"[-] Failed to load JSON {path}: {e}")
+            return None
+
+def collect_attack_patterns(json_files: List[Path]) -> Dict[str, Dict]:
+    """
+    Return dict ATTACK_ID -> {name, description, uuid, external_references}
+    Only includes objects that have a mitre-attack external_id (Txxx)
+    """
+    attacks = {}
+    for jf in json_files:
+        j = load_json_safe(jf)
+        if not j:
+            continue
+        objs = j.get("objects") if isinstance(j, dict) else None
+        if objs is None:
+            continue
+        for obj in objs:
+            if not isinstance(obj, dict):
+                continue
+            if obj.get("type") != "attack-pattern":
+                continue
+            # find mitre-attack external id
+            ext_id = ""
+            for ref in obj.get("external_references", []) or []:
+                if (ref.get("source_name") or "").lower() == "mitre-attack" and ref.get("external_id"):
+                    ext_id = str(ref.get("external_id")).strip().upper()
+                    break
+            if not ext_id:
+                # skip patterns with no ATT&CK external id (we only want ATT&CK techniques)
+                continue
+            attacks[ext_id] = {
+                "uuid": obj.get("id",""),
+                "attack_id": ext_id,
+                "attack_name": obj.get("name","") or "",
+                "attack_desc": (obj.get("description","") or "").strip(),
+                "external_references": obj.get("external_references", []) or [],
+                "kill_chain_phases": obj.get("kill_chain_phases", []) or []
+            }
+    print(f"[+] Collected {len(attacks)} ATT&CK attack-patterns")
+    return attacks
+
+def collect_capec_lookup(repo_root: Path) -> Dict[str, Dict]:
+    """
+    Build CAPEC lookup from CTI repo capec/2.1/attack-pattern/*.json files (external_references with source_name 'capec')
+    Returns dict CAPEC-ID -> {capec_name, capec_desc, uuid}
+    """
+    capec_lookup = {}
+    capec_dir = repo_root / "capec" / "2.1" / "attack-pattern"
+    if not capec_dir.exists():
+        # fallback: search repo for attack-pattern objects that reference capec
+        print("[!] capec folder not found at expected path; attempting fallback scan in whole repo")
+        for p in repo_root.rglob("*.json"):
+            j = load_json_safe(p)
+            if not j:
+                continue
+            objs = j.get("objects") if isinstance(j, dict) else None
+            if not objs:
+                continue
+            for obj in objs:
+                if obj.get("type") != "attack-pattern":
+                    continue
+                for ref in obj.get("external_references", []) or []:
+                    if (ref.get("source_name") or "").lower().startswith("capec") and ref.get("external_id"):
+                        cid = str(ref.get("external_id")).strip().upper()
+                        capec_lookup.setdefault(cid, {"capec_name": obj.get("name","") or "", "capec_desc": (obj.get("description","") or "").strip(), "uuid": obj.get("id","")})
+        print(f"[+] Fallback CAPEC entries found: {len(capec_lookup)}")
+        return capec_lookup
+
+    print("[+] Scanning CAPEC files under capec/2.1/attack-pattern ...")
+    for jf in capec_dir.rglob("*.json"):
+        j = load_json_safe(jf)
+        if not j:
+            continue
+        objs = j.get("objects") if isinstance(j, dict) else None
+        if not objs:
+            continue
+        for obj in objs:
+            if obj.get("type") != "attack-pattern":
+                continue
+            # find capec external id
+            for ref in obj.get("external_references", []) or []:
+                s = (ref.get("source_name") or "").lower()
+                if "capec" in s and ref.get("external_id"):
+                    cid = str(ref.get("external_id")).strip().upper()
+                    capec_lookup[cid] = {
+                        "capec_name": obj.get("name","") or "",
+                        "capec_desc": (obj.get("description","") or "").strip(),
+                        "uuid": obj.get("id","")
+                    }
+                    break
+    print(f"[+] Collected {len(capec_lookup)} CAPEC entries from repo")
+    return capec_lookup
+
+def build_attack_capec_mappings(attacks: Dict[str, Dict], capec_lookup: Dict[str, Dict]) -> List[Dict]:
+    """
+    For each attack, inspect external_references for capec refs.
+    Output list of mapping rows.
+    """
+    rows = []
+    for aid, aobj in attacks.items():
+        ext_refs = aobj.get("external_references", []) or []
+        found = False
+        for ref in ext_refs:
+            s = (ref.get("source_name") or "").lower()
+            eid = ref.get("external_id") or ""
+            if "capec" in s and eid:
+                cid = str(eid).strip().upper()
+                capec_info = capec_lookup.get(cid, {"capec_name":"", "capec_desc":""})
+                rows.append({
+                    "ATTACK_ID": aid,
+                    "ATTACK_NAME": aobj.get("attack_name",""),
+                    "CAPEC_ID": cid,
+                    "CAPEC_NAME": capec_info.get("capec_name",""),
+                    "CAPEC_DESCRIPTION": capec_info.get("capec_desc",""),
+                    "SOURCE": "external_reference",
+                    "RELATION_TYPE": ref.get("relationship_type","") or "",
+                    "NOTE": ref.get("description","") or ""
+                })
+                found = True
+        # optional: if none found, still emit row with empty CAPEC columns (so user can see missing)
+        if not found:
+            rows.append({
+                "ATTACK_ID": aid,
+                "ATTACK_NAME": aobj.get("attack_name",""),
+                "CAPEC_ID": "",
+                "CAPEC_NAME": "",
+                "CAPEC_DESCRIPTION": "",
+                "SOURCE": "",
+                "RELATION_TYPE": "",
+                "NOTE": ""
+            })
+    return rows
+
+def main():
+    OUT_DIR.mkdir(parents=True, exist_ok=True)
+    tmpdir = Path(tempfile.mkdtemp(prefix=TMP_PREFIX))
+    try:
+        zip_path = download_cti_zip(tmpdir)
+        repo_root = extract_zip(zip_path, tmpdir)
+        # repo_root typically like .../cti-master or cti-<branch>
+        # find enterprise attack json files
+        ea_jsons = find_enterprise_attack_json(repo_root)
+        if not ea_jsons:
+            print("[-] enterprise-attack JSON files not found in CTI repo. Exiting.")
+            return
+        attacks = collect_attack_patterns(ea_jsons)
+        capec_lookup = collect_capec_lookup(repo_root)
+
+        rows = build_attack_capec_mappings(attacks, capec_lookup)
+        df = pd.DataFrame(rows, columns=["ATTACK_ID","ATTACK_NAME","CAPEC_ID","CAPEC_NAME","CAPEC_DESCRIPTION","SOURCE","RELATION_TYPE","NOTE"])
+        df.to_csv(OUT_CSV, index=False, encoding="utf-8-sig")
+        print(f"[+] Wrote {len(df)} rows to {OUT_CSV}")
+    finally:
+        # cleanup temporary extraction directory
+        try:
+            import shutil
+            shutil.rmtree(tmpdir)
+        except Exception:
+            pass
 
 if __name__ == "__main__":
     main()
