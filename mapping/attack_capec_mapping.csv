@@ -1,0 +1,37 @@
+﻿ATTACK_ID,ATTACK_NAME,CAPEC_ID
+T1148,HISTCONTROL,CAPEC-13
+T1044,File System Permissions Weakness,CAPEC-17
+T1192,Spearphishing Link,CAPEC-163
+T1089,Disabling Security Tools,CAPEC-578
+T1017,Application Deployment Software,CAPEC-187
+T1162,Login Item,CAPEC-564
+T1058,Service Registry Permissions Weakness,CAPEC-478
+T1038,DLL Search Order Hijacking,CAPEC-471
+T1050,New Service,CAPEC-550
+T1062,Hypervisor,CAPEC-552
+T1004,Winlogon Helper DLL,CAPEC-579
+T1009,Binary Padding,CAPEC-572
+T1076,Remote Desktop Protocol,CAPEC-555
+T1031,Modify Existing Service,CAPEC-551
+T1019,System Firmware,CAPEC-532
+T1042,Change Default File Association,CAPEC-556
+T1054,Indicator Blocking,CAPEC-571
+T1193,Spearphishing Attachment,CAPEC-163
+T1045,Software Packing,CAPEC-570
+T1051,Shared Webroot,CAPEC-563
+T1141,Input Prompt,CAPEC-569
+T1060,Registry Run Keys / Startup Folder,CAPEC-270
+T1023,Shortcut Modification,CAPEC-132
+T1015,Accessibility Features,CAPEC-558
+T1097,Pass the Ticket,CAPEC-645
+T1157,Dylib Hijacking,CAPEC-471
+T1073,DLL Side-Loading,CAPEC-641
+T1081,Credentials in Files,CAPEC-639
+T1100,Web Shell,CAPEC-650
+T1075,Pass the Hash,CAPEC-644
+T1028,Windows Remote Management,CAPEC-555
+T1034,Path Interception,CAPEC-159
+T1194,Spearphishing via Service,CAPEC-163
+T1130,Install Root Certificate,CAPEC-479
+T1151,Space after Filename,CAPEC-649
+T1077,Windows Admin Shares,CAPEC-561
