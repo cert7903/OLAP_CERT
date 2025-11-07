@@ -1,177 +1,233 @@
-﻿ATTACK_ID,ATTACK_NAME,CAPEC_ID,CAPEC_NAME,SOURCE,RELATION_TYPE,NOTE,SIMILARITY,MATCH_METHOD
-T1113,Screen Capture,CAPEC-648,Collect Data from Screen Capture,semantic,semantic_similarity,,0.7641,sbert
-T1067,Bootkit,CAPEC-638,Altered Component Firmware,semantic,semantic_similarity,,0.7377,sbert
-T1037,Boot or Logon Initialization Scripts,CAPEC-564,Run Software at Logon,semantic,semantic_similarity,,0.7372,sbert
-T1056.001,Keylogging,CAPEC-568,Capture Credentials via Keylogger,semantic,semantic_similarity,,0.7908,sbert
-T1498.001,Direct Network Flood,CAPEC-486,UDP Flood,semantic,semantic_similarity,,0.7391,sbert
-T1498.001,Direct Network Flood,CAPEC-482,TCP Flood,semantic,semantic_similarity,,0.7031,sbert
-T1499.001,OS Exhaustion Flood,CAPEC-482,TCP Flood,semantic,semantic_similarity,,0.7538,sbert
-T1014,Rootkit,CAPEC-552,Install Rootkit ,semantic,semantic_similarity,,0.8131,sbert
-T1123,Audio Capture,CAPEC-634,Probe Audio and Video Peripherals,semantic,semantic_similarity,,0.7889,sbert
-T1543,Create or Modify System Process,CAPEC-550,Install New Service,semantic,semantic_similarity,,0.7049,sbert
-T1109,Component Firmware,CAPEC-638,Altered Component Firmware,semantic,semantic_similarity,,0.8031,sbert
-T1109,Component Firmware,CAPEC-440,Hardware Integrity Attack,semantic,semantic_similarity,,0.714,sbert
-T1036.007,Double File Extension,CAPEC-635,Alternative Execution Due to Deceptive Filenames,semantic,semantic_similarity,,0.7127,sbert
-T1069,Permission Groups Discovery,CAPEC-576,Group Permission Footprinting,semantic,semantic_similarity,,0.705,sbert
-T1574.011,Services Registry Permissions Weakness,CAPEC-203,Manipulate Registry Information,semantic,semantic_similarity,,0.7129,sbert
-T1574.011,Services Registry Permissions Weakness,CAPEC-478,Modification of Windows Service Configuration,semantic,semantic_similarity,,0.7016,sbert
-T1542.003,Bootkit,CAPEC-638,Altered Component Firmware,semantic,semantic_similarity,,0.7645,sbert
-T1172,Domain Fronting,CAPEC-481,Contradictory Destinations in Traffic Routing Schemes,semantic,semantic_similarity,,0.7971,sbert
-T1547,Boot or Logon Autostart Execution,CAPEC-270,Modification of Registry Run Keys,semantic,semantic_similarity,,0.7129,sbert
-T1547,Boot or Logon Autostart Execution,CAPEC-564,Run Software at Logon,semantic,semantic_similarity,,0.7023,sbert
-T1192,Spearphishing Link,CAPEC-163,Spear Phishing,semantic,semantic_similarity,,0.7254,sbert
-T1587.001,Malware,CAPEC-670,Software Development Tools Maliciously Altered,semantic,semantic_similarity,,0.7033,sbert
-T1543.003,Windows Service,CAPEC-550,Install New Service,semantic,semantic_similarity,,0.7348,sbert
-T1566.002,Spearphishing Link,CAPEC-163,Spear Phishing,semantic,semantic_similarity,,0.7473,sbert
-T1598.003,Spearphishing Link,CAPEC-163,Spear Phishing,semantic,semantic_similarity,,0.7351,sbert
-T1089,Disabling Security Tools,CAPEC-578,Disable Security Software,semantic,semantic_similarity,,0.854,sbert
-T1574.001,DLL,CAPEC-641,DLL Side-Loading,semantic,semantic_similarity,,0.8536,sbert
-T1115,Clipboard Data,CAPEC-637,Collect Data from Clipboard,semantic,semantic_similarity,,0.7427,sbert
-T1103,AppInit DLLs,CAPEC-641,DLL Side-Loading,semantic,semantic_similarity,,0.7024,sbert
-T1007,System Service Discovery,CAPEC-574,Services Footprinting,semantic,semantic_similarity,,0.732,sbert
-T1040,Network Sniffing,CAPEC-158,Sniffing Network Traffic,semantic,semantic_similarity,,0.7059,sbert
-T1135,Network Share Discovery,CAPEC-643,Identify Shared Files/Directories on System,semantic,semantic_similarity,,0.7453,sbert
-T1120,Peripheral Device Discovery,CAPEC-646,Peripheral Footprinting,semantic,semantic_similarity,,0.7474,sbert
-T1587.002,Code Signing Certificates,CAPEC-206,Signing Malicious Code,semantic,semantic_similarity,,0.7149,sbert
-T1498.002,Reflection Amplification,CAPEC-490,Amplification,semantic,semantic_similarity,,0.7026,sbert
-T1176,Software Extensions,CAPEC-698,Install Malicious Extension,semantic,semantic_similarity,,0.7755,sbert
-T1499.002,Service Exhaustion Flood,CAPEC-489,SSL Flood,semantic,semantic_similarity,,0.7357,sbert
-T1499.002,Service Exhaustion Flood,CAPEC-488,HTTP Flood,semantic,semantic_similarity,,0.7353,sbert
-T1499.002,Service Exhaustion Flood,CAPEC-125,Flooding,semantic,semantic_similarity,,0.7151,sbert
-T1499.002,Service Exhaustion Flood,CAPEC-469,HTTP DoS,semantic,semantic_similarity,,0.7122,sbert
-T1195.003,Compromise Hardware Supply Chain,CAPEC-522,Malicious Hardware Component Replacement,semantic,semantic_similarity,,0.7637,sbert
-T1195.003,Compromise Hardware Supply Chain,CAPEC-401,Physically Hacking Hardware,semantic,semantic_similarity,,0.7227,sbert
-T1195.003,Compromise Hardware Supply Chain,CAPEC-452,Infected Hardware,semantic,semantic_similarity,,0.7192,sbert
-T1195.003,Compromise Hardware Supply Chain,CAPEC-537,Infiltration of Hardware Development Environment,semantic,semantic_similarity,,0.7075,sbert
-T1195.003,Compromise Hardware Supply Chain,CAPEC-440,Hardware Integrity Attack,semantic,semantic_similarity,,0.7054,sbert
-T1195,Supply Chain Compromise,CAPEC-523,Malicious Software Implanted,semantic,semantic_similarity,,0.7309,sbert
-T1195,Supply Chain Compromise,CAPEC-522,Malicious Hardware Component Replacement,semantic,semantic_similarity,,0.7085,sbert
-T1195,Supply Chain Compromise,CAPEC-439,Manipulation During Distribution,semantic,semantic_similarity,,0.7035,sbert
-T1558,Steal or Forge Kerberos Tickets,CAPEC-652,Use of Known Kerberos Credentials,semantic,semantic_similarity,,0.8034,sbert
-T1558,Steal or Forge Kerberos Tickets,CAPEC-645,Use of Captured Tickets (Pass The Ticket),semantic,semantic_similarity,,0.7954,sbert
-T1558,Steal or Forge Kerberos Tickets,CAPEC-509,Kerberoasting,semantic,semantic_similarity,,0.7658,sbert
-T1055.003,Thread Execution Hijacking,CAPEC-30,Hijacking a Privileged Thread of Execution,semantic,semantic_similarity,,0.7753,sbert
-T1055.003,Thread Execution Hijacking,CAPEC-640,Inclusion of Code in Existing Process,semantic,semantic_similarity,,0.7131,sbert
-T1055,Process Injection,CAPEC-640,Inclusion of Code in Existing Process,semantic,semantic_similarity,,0.7892,sbert
-T1038,DLL Search Order Hijacking,CAPEC-641,DLL Side-Loading,semantic,semantic_similarity,,0.7378,sbert
-T1050,New Service,CAPEC-550,Install New Service,semantic,semantic_similarity,,0.814,sbert
-T1557.004,Evil Twin,CAPEC-615,Evil Twin Wi-Fi Attack,semantic,semantic_similarity,,0.8329,sbert
-T1611,Escape to Host,CAPEC-480,Escaping Virtualization,semantic,semantic_similarity,,0.7071,sbert
-T1004,Winlogon Helper DLL,CAPEC-579,Replace Winlogon Helper DLL,semantic,semantic_similarity,,0.82,sbert
-T1021,Remote Services,CAPEC-555,Remote Services with Stolen Credentials,semantic,semantic_similarity,,0.7058,sbert
-T1112,Modify Registry,CAPEC-203,Manipulate Registry Information,semantic,semantic_similarity,,0.7566,sbert
-T1574.008,Path Interception by Search Order Hijacking,CAPEC-471,Search Order Hijacking,semantic,semantic_similarity,,0.7641,sbert
-T1557.003,DHCP Spoofing,CAPEC-697,DHCP Spoofing,semantic,semantic_similarity,,0.8216,sbert
-T1563,Remote Service Session Hijacking,CAPEC-593,Session Hijacking,semantic,semantic_similarity,,0.736,sbert
-T1505.003,Web Shell,CAPEC-650,Upload a Web Shell to a Web Server,semantic,semantic_similarity,,0.7947,sbert
-T1548,Abuse Elevation Control Mechanism,CAPEC-122,Privilege Abuse,semantic,semantic_similarity,,0.7216,sbert
-T1547.004,Winlogon Helper DLL,CAPEC-579,Replace Winlogon Helper DLL,semantic,semantic_similarity,,0.8301,sbert
-T1042,Change Default File Association,CAPEC-556,Replace File Extension Handlers,semantic,semantic_similarity,,0.7248,sbert
-T1598.004,Spearphishing Voice,CAPEC-656,Voice Phishing,semantic,semantic_similarity,,0.8274,sbert
-T1574.005,Executable Installer File Permissions Weakness,CAPEC-642,Replace Binaries,semantic,semantic_similarity,,0.7441,sbert
-T1558.001,Golden Ticket,CAPEC-645,Use of Captured Tickets (Pass The Ticket),semantic,semantic_similarity,,0.7081,sbert
-T1542.002,Component Firmware,CAPEC-638,Altered Component Firmware,semantic,semantic_similarity,,0.8253,sbert
-T1542.002,Component Firmware,CAPEC-440,Hardware Integrity Attack,semantic,semantic_similarity,,0.7004,sbert
-T1550.003,Pass the Ticket,CAPEC-645,Use of Captured Tickets (Pass The Ticket),semantic,semantic_similarity,,0.8167,sbert
-T1542,Pre-OS Boot,CAPEC-638,Altered Component Firmware,semantic,semantic_similarity,,0.7016,sbert
-T1051,Shared Webroot,CAPEC-563,Add Malicious File to Shared Webroot,semantic,semantic_similarity,,0.8104,sbert
-T1055.002,Portable Executable Injection,CAPEC-640,Inclusion of Code in Existing Process,semantic,semantic_similarity,,0.7356,sbert
-T1134.001,Token Impersonation/Theft,CAPEC-633,Token Impersonation,semantic,semantic_similarity,,0.759,sbert
-T1598.002,Spearphishing Attachment,CAPEC-163,Spear Phishing,semantic,semantic_similarity,,0.7255,sbert
-T1134.003,Make and Impersonate Token,CAPEC-633,Token Impersonation,semantic,semantic_similarity,,0.7325,sbert
-T1141,Input Prompt,CAPEC-654,Credential Prompt Impersonation,semantic,semantic_similarity,,0.7047,sbert
-T1546.001,Change Default File Association,CAPEC-556,Replace File Extension Handlers,semantic,semantic_similarity,,0.7119,sbert
-T1055.014,VDSO Hijacking,CAPEC-640,Inclusion of Code in Existing Process,semantic,semantic_similarity,,0.7615,sbert
-T1547.001,Registry Run Keys / Startup Folder,CAPEC-270,Modification of Registry Run Keys,semantic,semantic_similarity,,0.7583,sbert
-T1069.001,Local Groups,CAPEC-576,Group Permission Footprinting,semantic,semantic_similarity,,0.7399,sbert
-T1098,Account Manipulation,CAPEC-122,Privilege Abuse,semantic,semantic_similarity,,0.7417,sbert
-T1097,Pass the Ticket,CAPEC-645,Use of Captured Tickets (Pass The Ticket),semantic,semantic_similarity,,0.8183,sbert
-T1566,Phishing,CAPEC-163,Spear Phishing,semantic,semantic_similarity,,0.7588,sbert
-T1562.001,Disable or Modify Tools,CAPEC-578,Disable Security Software,semantic,semantic_similarity,,0.7225,sbert
-T1574,Hijack Execution Flow,CAPEC-234,Hijacking a privileged process,semantic,semantic_similarity,,0.7105,sbert
-T1036.012,Browser Fingerprint,CAPEC-170,Web Application Fingerprinting,semantic,semantic_similarity,,0.734,sbert
-T1036.012,Browser Fingerprint,CAPEC-472,Browser Fingerprinting,semantic,semantic_similarity,,0.7303,sbert
-T1073,DLL Side-Loading,CAPEC-641,DLL Side-Loading,semantic,semantic_similarity,,0.9195,sbert
-T1068,Exploitation for Privilege Escalation,CAPEC-480,Escaping Virtualization,semantic,semantic_similarity,,0.7312,sbert
-T1068,Exploitation for Privilege Escalation,CAPEC-233,Privilege Escalation,semantic,semantic_similarity,,0.7204,sbert
-T1068,Exploitation for Privilege Escalation,CAPEC-122,Privilege Abuse,semantic,semantic_similarity,,0.7181,sbert
-T1068,Exploitation for Privilege Escalation,CAPEC-69,Target Programs with Elevated Privileges,semantic,semantic_similarity,,0.7111,sbert
-T1110.004,Credential Stuffing,CAPEC-600,Credential Stuffing,semantic,semantic_similarity,,0.7574,sbert
-T1208,Kerberoasting,CAPEC-509,Kerberoasting,semantic,semantic_similarity,,0.8125,sbert
-T1564.006,Run Virtual Instance,CAPEC-480,Escaping Virtualization,semantic,semantic_similarity,,0.7273,sbert
-T1599,Network Boundary Bridging,CAPEC-700,Network Boundary Bridging,semantic,semantic_similarity,,0.7627,sbert
-T1566.004,Spearphishing Voice,CAPEC-656,Voice Phishing,semantic,semantic_similarity,,0.7604,sbert
-T1100,Web Shell,CAPEC-650,Upload a Web Shell to a Web Server,semantic,semantic_similarity,,0.7879,sbert
-T1012,Query Registry,CAPEC-647,Collect Data from Registries,semantic,semantic_similarity,,0.718,sbert
-T1550.004,Web Session Cookie,CAPEC-62,Cross Site Request Forgery,semantic,semantic_similarity,,0.722,sbert
-T1550.004,Web Session Cookie,CAPEC-593,Session Hijacking,semantic,semantic_similarity,,0.7008,sbert
-T1078.002,Domain Accounts,CAPEC-560,Use of Known Domain Credentials,semantic,semantic_similarity,,0.7354,sbert
-T1506,Web Session Cookie,CAPEC-62,Cross Site Request Forgery,semantic,semantic_similarity,,0.7423,sbert
-T1506,Web Session Cookie,CAPEC-593,Session Hijacking,semantic,semantic_similarity,,0.72,sbert
-T1506,Web Session Cookie,CAPEC-196,Session Credential Falsification through Forging,semantic,semantic_similarity,,0.701,sbert
-T1553.004,Install Root Certificate,CAPEC-479,Malicious Root Certificate,semantic,semantic_similarity,,0.8263,sbert
-T1037.003,Network Logon Script,CAPEC-564,Run Software at Logon,semantic,semantic_similarity,,0.7401,sbert
-T1090.004,Domain Fronting,CAPEC-481,Contradictory Destinations in Traffic Routing Schemes,semantic,semantic_similarity,,0.7974,sbert
-T1493,Transmitted Data Manipulation,CAPEC-216,Communication Channel Manipulation,semantic,semantic_similarity,,0.7414,sbert
-T1598,Phishing for Information,CAPEC-163,Spear Phishing,semantic,semantic_similarity,,0.7508,sbert
-T1598,Phishing for Information,CAPEC-98,Phishing,semantic,semantic_similarity,,0.7053,sbert
-T1565.002,Transmitted Data Manipulation,CAPEC-216,Communication Channel Manipulation,semantic,semantic_similarity,,0.7251,sbert
-T1558.002,Silver Ticket,CAPEC-645,Use of Captured Tickets (Pass The Ticket),semantic,semantic_similarity,,0.7374,sbert
-T1194,Spearphishing via Service,CAPEC-163,Spear Phishing,semantic,semantic_similarity,,0.713,sbert
-T1130,Install Root Certificate,CAPEC-479,Malicious Root Certificate,semantic,semantic_similarity,,0.8519,sbert
-T1134,Access Token Manipulation,CAPEC-633,Token Impersonation,semantic,semantic_similarity,,0.742,sbert
-T1563.002,RDP Hijacking,CAPEC-555,Remote Services with Stolen Credentials,semantic,semantic_similarity,,0.747,sbert
-T1151,Space after Filename,CAPEC-649,Adding a Space to a File Extension,semantic,semantic_similarity,,0.7749,sbert
-T1036.006,Space after Filename,CAPEC-649,Adding a Space to a File Extension,semantic,semantic_similarity,,0.762,sbert
-T1574.002,DLL Side-Loading,CAPEC-641,DLL Side-Loading,semantic,semantic_similarity,,0.8262,sbert
-T1588.003,Code Signing Certificates,CAPEC-206,Signing Malicious Code,semantic,semantic_similarity,,0.7325,sbert
-T1021.001,Remote Desktop Protocol,CAPEC-555,Remote Services with Stolen Credentials,semantic,semantic_similarity,,0.7017,sbert
-T1037.001,Logon Script (Windows),CAPEC-564,Run Software at Logon,semantic,semantic_similarity,,0.7938,sbert
-T1564.004,NTFS File Attributes,CAPEC-168,Windows ::DATA Alternate Data Stream,semantic,semantic_similarity,,0.7611,sbert
-T1558.003,Kerberoasting,CAPEC-509,Kerberoasting,semantic,semantic_similarity,,0.7834,sbert
-T1096,NTFS File Attributes,CAPEC-168,Windows ::DATA Alternate Data Stream,semantic,semantic_similarity,,0.7377,sbert
-T1035,Service Execution,CAPEC-478,Modification of Windows Service Configuration,semantic,semantic_similarity,,0.7671,sbert
-T1598.001,Spearphishing Service,CAPEC-163,Spear Phishing,semantic,semantic_similarity,,0.7327,sbert
-T0888,Remote System Information Discovery,CAPEC-580,System Footprinting,semantic,semantic_similarity,,0.7054,sbert
-T0842,Network Sniffing,CAPEC-158,Sniffing Network Traffic,semantic,semantic_similarity,,0.7638,sbert
-T0851,Rootkit,CAPEC-552,Install Rootkit ,semantic,semantic_similarity,,0.7967,sbert
-T0862,Supply Chain Compromise,CAPEC-522,Malicious Hardware Component Replacement,semantic,semantic_similarity,,0.7347,sbert
-T0862,Supply Chain Compromise,CAPEC-439,Manipulation During Distribution,semantic,semantic_similarity,,0.7165,sbert
-T0812,Default Credentials,CAPEC-70,Try Common or Default Usernames and Passwords,semantic,semantic_similarity,,0.7194,sbert
-T0857,System Firmware,CAPEC-682,Exploitation of Firmware or ROM Code with Unpatchable Vulnerabilities,semantic,semantic_similarity,,0.7068,sbert
-T0852,Screen Capture,CAPEC-648,Collect Data from Screen Capture,semantic,semantic_similarity,,0.7254,sbert
-T0859,Valid Accounts,CAPEC-653,Use of Known Operating System Credentials,semantic,semantic_similarity,,0.7182,sbert
-T0890,Exploitation for Privilege Escalation,CAPEC-233,Privilege Escalation,semantic,semantic_similarity,,0.7682,sbert
-T0890,Exploitation for Privilege Escalation,CAPEC-69,Target Programs with Elevated Privileges,semantic,semantic_similarity,,0.7184,sbert
-T0890,Exploitation for Privilege Escalation,CAPEC-122,Privilege Abuse,semantic,semantic_similarity,,0.7068,sbert
-T1540,Code Injection,CAPEC-640,Inclusion of Code in Existing Process,semantic,semantic_similarity,,0.7942,sbert
-T1626,Abuse Elevation Control Mechanism,CAPEC-122,Privilege Abuse,semantic,semantic_similarity,,0.7777,sbert
-T1626,Abuse Elevation Control Mechanism,CAPEC-233,Privilege Escalation,semantic,semantic_similarity,,0.7258,sbert
-T1418.001,Security Software Discovery,CAPEC-581,Security Software Footprinting,semantic,semantic_similarity,,0.7314,sbert
-T1629.003,Disable or Modify Tools,CAPEC-578,Disable Security Software,semantic,semantic_similarity,,0.7917,sbert
-T1423,Network Service Scanning,CAPEC-300,Port Scanning,semantic,semantic_similarity,,0.718,sbert
-T1404,Exploitation for Privilege Escalation,CAPEC-122,Privilege Abuse,semantic,semantic_similarity,,0.7366,sbert
-T1404,Exploitation for Privilege Escalation,CAPEC-69,Target Programs with Elevated Privileges,semantic,semantic_similarity,,0.7219,sbert
-T1404,Exploitation for Privilege Escalation,CAPEC-233,Privilege Escalation,semantic,semantic_similarity,,0.7196,sbert
-T1404,Exploitation for Privilege Escalation,CAPEC-234,Hijacking a privileged process,semantic,semantic_similarity,,0.7034,sbert
-T1645,Compromise Client Software Binary,CAPEC-642,Replace Binaries,semantic,semantic_similarity,,0.709,sbert
-T1645,Compromise Client Software Binary,CAPEC-670,Software Development Tools Maliciously Altered,semantic,semantic_similarity,,0.7075,sbert
-T1645,Compromise Client Software Binary,CAPEC-538,Open-Source Library Manipulation,semantic,semantic_similarity,,0.7073,sbert
-T1625,Hijack Execution Flow,CAPEC-471,Search Order Hijacking,semantic,semantic_similarity,,0.7126,sbert
-T1416,URI Hijacking,CAPEC-505,Scheme Squatting,semantic,semantic_similarity,,0.701,sbert
-T1474.003,Compromise Software Supply Chain,CAPEC-439,Manipulation During Distribution,semantic,semantic_similarity,,0.7096,sbert
-T1467,Rogue Cellular Base Station,CAPEC-617,Cellular Rogue Base Station,semantic,semantic_similarity,,0.8153,sbert
-T1630.003,Disguise Root/Jailbreak Indicators,CAPEC-661,Root/Jailbreak Detection Evasion via Debugging,semantic,semantic_similarity,,0.7065,sbert
-T1630.003,Disguise Root/Jailbreak Indicators,CAPEC-660,Root/Jailbreak Detection Evasion via Hooking,semantic,semantic_similarity,,0.7025,sbert
-T1408,Disguise Root/Jailbreak Indicators,CAPEC-661,Root/Jailbreak Detection Evasion via Debugging,semantic,semantic_similarity,,0.7014,sbert
-T1631,Process Injection,CAPEC-640,Inclusion of Code in Existing Process,semantic,semantic_similarity,,0.7334,sbert
-T1474.002,Compromise Hardware Supply Chain,CAPEC-522,Malicious Hardware Component Replacement,semantic,semantic_similarity,,0.7611,sbert
-T1474.002,Compromise Hardware Supply Chain,CAPEC-401,Physically Hacking Hardware,semantic,semantic_similarity,,0.7086,sbert
-T1474.002,Compromise Hardware Supply Chain,CAPEC-440,Hardware Integrity Attack,semantic,semantic_similarity,,0.7072,sbert
-T1474.002,Compromise Hardware Supply Chain,CAPEC-516,Hardware Component Substitution During Baselining,semantic,semantic_similarity,,0.7058,sbert
-T1464,Network Denial of Service,CAPEC-601,Jamming,semantic,semantic_similarity,,0.7638,sbert
-T1577,Compromise Application Executable,CAPEC-660,Root/Jailbreak Detection Evasion via Hooking,semantic,semantic_similarity,,0.7142,sbert
-T1577,Compromise Application Executable,CAPEC-661,Root/Jailbreak Detection Evasion via Debugging,semantic,semantic_similarity,,0.7136,sbert
-T1475,Deliver Malicious App via Authorized App Store,CAPEC-660,Root/Jailbreak Detection Evasion via Hooking,semantic,semantic_similarity,,0.7217,sbert
-T1660,Phishing,CAPEC-164,Mobile Phishing,semantic,semantic_similarity,,0.7531,sbert
-T1399,Modify Trusted Execution Environment,CAPEC-660,Root/Jailbreak Detection Evasion via Hooking,semantic,semantic_similarity,,0.7643,sbert
+﻿ATTACK_ID,ATTACK_NAME,CAPEC_ID,CAPEC_NAME,SIMILARITY
+T1073,DLL Side-Loading,CAPEC-641,DLL Side-Loading,0.8805
+T1123,Audio Capture,CAPEC-634,Probe Audio and Video Peripherals,0.8343
+T1574.001,DLL,CAPEC-641,DLL Side-Loading,0.8252
+T1598.004,Spearphishing Voice,CAPEC-656,Voice Phishing,0.8233
+T1050,New Service,CAPEC-550,Install New Service,0.8155
+T1574.005,Executable Installer File Permissions Weakness,CAPEC-642,Replace Binaries,0.8074
+T1172,Domain Fronting,CAPEC-481,Contradictory Destinations in Traffic Routing Schemes,0.8058
+T1208,Kerberoasting,CAPEC-509,Kerberoasting,0.8051
+T1547.004,Winlogon Helper DLL,CAPEC-579,Replace Winlogon Helper DLL,0.8033
+T1089,Disabling Security Tools,CAPEC-578,Disable Security Software,0.8028
+T1558,Steal or Forge Kerberos Tickets,CAPEC-645,Use of Captured Tickets (Pass The Ticket),0.8004
+T1553.004,Install Root Certificate,CAPEC-479,Malicious Root Certificate,0.7991
+T1090.004,Domain Fronting,CAPEC-481,Contradictory Destinations in Traffic Routing Schemes,0.7989
+T1004,Winlogon Helper DLL,CAPEC-579,Replace Winlogon Helper DLL,0.7989
+T1051,Shared Webroot,CAPEC-563,Add Malicious File to Shared Webroot,0.793
+T1055,Process Injection,CAPEC-640,Inclusion of Code in Existing Process,0.7893
+T1130,Install Root Certificate,CAPEC-479,Malicious Root Certificate,0.7844
+T1035,Service Execution,CAPEC-478,Modification of Windows Service Configuration,0.7828
+T1055.014,VDSO Hijacking,CAPEC-640,Inclusion of Code in Existing Process,0.7819
+T1014,Rootkit,CAPEC-552,Install Rootkit ,0.7803
+T1042,Change Default File Association,CAPEC-556,Replace File Extension Handlers,0.7771
+T1505.003,Web Shell,CAPEC-650,Upload a Web Shell to a Web Server,0.7744
+T1055.003,Thread Execution Hijacking,CAPEC-30,Hijacking a Privileged Thread of Execution,0.7741
+T1550.003,Pass the Ticket,CAPEC-645,Use of Captured Tickets (Pass The Ticket),0.7737
+T1037.001,Logon Script (Windows),CAPEC-564,Run Software at Logon,0.7728
+T1542.002,Component Firmware,CAPEC-638,Altered Component Firmware,0.7721
+T1558.003,Kerberoasting,CAPEC-509,Kerberoasting,0.7631
+T1563.002,RDP Hijacking,CAPEC-555,Remote Services with Stolen Credentials,0.7607
+T1176,Software Extensions,CAPEC-698,Install Malicious Extension,0.7598
+T1036.007,Double File Extension,CAPEC-635,Alternative Execution Due to Deceptive Filenames,0.7589
+T1574.010,Services File Permissions Weakness,CAPEC-642,Replace Binaries,0.7581
+T1598,Phishing for Information,CAPEC-163,Spear Phishing,0.7559
+T1038,DLL Search Order Hijacking,CAPEC-641,DLL Side-Loading,0.7548
+T1656,Impersonation,CAPEC-415,Pretexting via Phone,0.7533
+T1542.003,Bootkit,CAPEC-638,Altered Component Firmware,0.7532
+T1068,Exploitation for Privilege Escalation,CAPEC-480,Escaping Virtualization,0.7526
+T1543,Create or Modify System Process,CAPEC-550,Install New Service,0.7522
+T1069.001,Local Groups,CAPEC-576,Group Permission Footprinting,0.752
+T1566,Phishing,CAPEC-163,Spear Phishing,0.751
+T1506,Web Session Cookie,CAPEC-62,Cross Site Request Forgery,0.7508
+T1109,Component Firmware,CAPEC-638,Altered Component Firmware,0.7501
+T1195.003,Compromise Hardware Supply Chain,CAPEC-522,Malicious Hardware Component Replacement,0.7495
+T1566.004,Spearphishing Voice,CAPEC-656,Voice Phishing,0.7483
+T1499.002,Service Exhaustion Flood,CAPEC-489,SSL Flood,0.7476
+T1599,Network Boundary Bridging,CAPEC-700,Network Boundary Bridging,0.7469
+T1546.016,Installer Packages,CAPEC-642,Replace Binaries,0.7464
+T1548,Abuse Elevation Control Mechanism,CAPEC-234,Hijacking a privileged process,0.7435
+T1007,System Service Discovery,CAPEC-574,Services Footprinting,0.7424
+T1037.003,Network Logon Script,CAPEC-564,Run Software at Logon,0.7408
+T1574,Hijack Execution Flow,CAPEC-159,Redirect Access to Libraries,0.7398
+T1498.001,Direct Network Flood,CAPEC-486,UDP Flood,0.7388
+T1550.004,Web Session Cookie,CAPEC-62,Cross Site Request Forgery,0.738
+T1103,AppInit DLLs,CAPEC-641,DLL Side-Loading,0.7374
+T1113,Screen Capture,CAPEC-648,Collect Data from Screen Capture,0.7373
+T1557.003,DHCP Spoofing,CAPEC-697,DHCP Spoofing,0.7359
+T1134,Access Token Manipulation,CAPEC-633,Token Impersonation,0.735
+T1097,Pass the Ticket,CAPEC-645,Use of Captured Tickets (Pass The Ticket),0.7339
+T1100,Web Shell,CAPEC-650,Upload a Web Shell to a Web Server,0.7336
+T1564.004,NTFS File Attributes,CAPEC-168,Windows ::DATA Alternate Data Stream,0.7333
+T1547,Boot or Logon Autostart Execution,CAPEC-270,Modification of Registry Run Keys,0.7328
+T1055.002,Portable Executable Injection,CAPEC-640,Inclusion of Code in Existing Process,0.7327
+T1499.001,OS Exhaustion Flood,CAPEC-482,TCP Flood,0.7299
+T1539,Steal Web Session Cookie,CAPEC-62,Cross Site Request Forgery,0.7275
+T1134.003,Make and Impersonate Token,CAPEC-633,Token Impersonation,0.7274
+T1037,Boot or Logon Initialization Scripts,CAPEC-564,Run Software at Logon,0.7269
+T1557.004,Evil Twin,CAPEC-615,Evil Twin Wi-Fi Attack,0.7258
+T1574.002,DLL Side-Loading,CAPEC-641,DLL Side-Loading,0.7253
+T1598.003,Spearphishing Link,CAPEC-163,Spear Phishing,0.7251
+T1566.002,Spearphishing Link,CAPEC-163,Spear Phishing,0.7248
+T1120,Peripheral Device Discovery,CAPEC-646,Peripheral Footprinting,0.7222
+T1558.002,Silver Ticket,CAPEC-645,Use of Captured Tickets (Pass The Ticket),0.7215
+T1204,User Execution,CAPEC-62,Cross Site Request Forgery,0.7213
+T1546.009,AppCert DLLs,CAPEC-640,Inclusion of Code in Existing Process,0.7211
+T1195,Supply Chain Compromise,CAPEC-439,Manipulation During Distribution,0.7204
+T1009,Binary Padding,CAPEC-655,Avoid Security Tool Identification by Adding Data,0.7201
+T1547.001,Registry Run Keys / Startup Folder,CAPEC-270,Modification of Registry Run Keys,0.72
+T1546.010,AppInit DLLs,CAPEC-641,DLL Side-Loading,0.7174
+T1055.008,Ptrace System Calls,CAPEC-640,Inclusion of Code in Existing Process,0.7168
+T1027.001,Binary Padding,CAPEC-655,Avoid Security Tool Identification by Adding Data,0.7163
+T1543.003,Windows Service,CAPEC-550,Install New Service,0.7161
+T1546.001,Change Default File Association,CAPEC-556,Replace File Extension Handlers,0.7154
+T1012,Query Registry,CAPEC-647,Collect Data from Registries,0.7144
+T1669,Wi-Fi Networks,CAPEC-615,Evil Twin Wi-Fi Attack,0.7141
+T1078.002,Domain Accounts,CAPEC-575,Account Footprinting,0.7131
+T1076,Remote Desktop Protocol,CAPEC-555,Remote Services with Stolen Credentials,0.713
+T1210,Exploitation of Remote Services,CAPEC-580,System Footprinting,0.7123
+T1596.001,DNS/Passive DNS,CAPEC-291,DNS Zone Transfers,0.7122
+T1598.001,Spearphishing Service,CAPEC-163,Spear Phishing,0.7122
+T1587.001,Malware,CAPEC-670,Software Development Tools Maliciously Altered,0.7119
+T1189,Drive-by Compromise,CAPEC-63,Cross-Site Scripting (XSS),0.7115
+T1598.002,Spearphishing Attachment,CAPEC-163,Spear Phishing,0.7109
+T1542,Pre-OS Boot,CAPEC-638,Altered Component Firmware,0.7103
+T1151,Space after Filename,CAPEC-649,Adding a Space to a File Extension,0.7096
+T1564,Hide Artifacts,CAPEC-538,Open-Source Library Manipulation,0.7083
+T1096,NTFS File Attributes,CAPEC-168,Windows ::DATA Alternate Data Stream,0.7079
+T1091,Replication Through Removable Media,CAPEC-457,USB Memory Attacks,0.7073
+T1067,Bootkit,CAPEC-638,Altered Component Firmware,0.7063
+T1546.008,Accessibility Features,CAPEC-270,Modification of Registry Run Keys,0.705
+T1182,AppCert DLLs,CAPEC-640,Inclusion of Code in Existing Process,0.7046
+T1044,File System Permissions Weakness,CAPEC-642,Replace Binaries,0.7041
+T1110.004,Credential Stuffing,CAPEC-600,Credential Stuffing,0.7034
+T1056.002,GUI Input Capture,CAPEC-654,Credential Prompt Impersonation,0.7028
+T1112,Modify Registry,CAPEC-203,Manipulate Registry Information,0.7017
+T1071.003,Mail Protocols,CAPEC-134,Email Injection,0.701
+T1558.001,Golden Ticket,CAPEC-645,Use of Captured Tickets (Pass The Ticket),0.701
+T1098,Account Manipulation,CAPEC-122,Privilege Abuse,0.7007
+T1069,Permission Groups Discovery,CAPEC-576,Group Permission Footprinting,0.7006
+T1595,Active Scanning,CAPEC-309,Network Topology Mapping,0.7001
+T1141,Input Prompt,CAPEC-654,Credential Prompt Impersonation,0.699
+T1203,Exploitation for Client Execution,CAPEC-63,Cross-Site Scripting (XSS),0.6985
+T1565,Data Manipulation,CAPEC-444,Development Alteration,0.6983
+T1588.003,Code Signing Certificates,CAPEC-206,Signing Malicious Code,0.6982
+T1565.002,Transmitted Data Manipulation,CAPEC-610,Cellular Data Injection,0.6971
+T1136.002,Domain Account,CAPEC-575,Account Footprinting,0.6965
+T1518,Software Discovery,CAPEC-581,Security Software Footprinting,0.6964
+T1495,Firmware Corruption,CAPEC-638,Altered Component Firmware,0.6963
+T1499.003,Application Exhaustion Flood,CAPEC-130,Excessive Allocation,0.6951
+T1205,Traffic Signaling,CAPEC-300,Port Scanning,0.695
+T1574.011,Services Registry Permissions Weakness,CAPEC-203,Manipulate Registry Information,0.6932
+T1088,Bypass User Account Control,CAPEC-234,Hijacking a privileged process,0.6927
+T1036.006,Space after Filename,CAPEC-649,Adding a Space to a File Extension,0.6923
+T1574.008,Path Interception by Search Order Hijacking,CAPEC-641,DLL Side-Loading,0.6923
+T1556,Modify Authentication Process,CAPEC-653,Use of Known Operating System Credentials,0.6919
+T1587.004,Exploits,CAPEC-670,Software Development Tools Maliciously Altered,0.6915
+T1562.001,Disable or Modify Tools,CAPEC-578,Disable Security Software,0.6908
+T1055.005,Thread Local Storage,CAPEC-640,Inclusion of Code in Existing Process,0.6903
+T1218.013,Mavinject,CAPEC-640,Inclusion of Code in Existing Process,0.6895
+T1055.012,Process Hollowing,CAPEC-30,Hijacking a Privileged Thread of Execution,0.6895
+T1195.002,Compromise Software Supply Chain,CAPEC-444,Development Alteration,0.6893
+T1021.001,Remote Desktop Protocol,CAPEC-555,Remote Services with Stolen Credentials,0.689
+T1056.001,Keylogging,CAPEC-568,Capture Credentials via Keylogger,0.6872
+T1584.006,Web Services,CAPEC-144,Detect Unpublicized Web Services,0.6868
+T1620,Reflective Code Loading,CAPEC-640,Inclusion of Code in Existing Process,0.6868
+T1587.002,Code Signing Certificates,CAPEC-206,Signing Malicious Code,0.6866
+T1125,Video Capture,CAPEC-634,Probe Audio and Video Peripherals,0.6856
+T1606.001,Web Cookies,CAPEC-62,Cross Site Request Forgery,0.6855
+T1493,Transmitted Data Manipulation,CAPEC-610,Cellular Data Injection,0.6853
+T1574.006,Dynamic Linker Hijacking,CAPEC-159,Redirect Access to Libraries,0.6848
+T1094,Custom Command and Control Protocol,CAPEC-220,Client-Server Protocol Manipulation,0.6847
+T1204.002,Malicious File,CAPEC-563,Add Malicious File to Shared Webroot,0.6843
+T1211,Exploitation for Defense Evasion,CAPEC-549,Local Execution of Code,0.6843
+T1569.002,Service Execution,CAPEC-478,Modification of Windows Service Configuration,0.684
+T1157,Dylib Hijacking,CAPEC-159,Redirect Access to Libraries,0.6836
+T1057,Process Discovery,CAPEC-574,Services Footprinting,0.6833
+T1078,Valid Accounts,CAPEC-122,Privilege Abuse,0.6828
+T1192,Spearphishing Link,CAPEC-163,Spear Phishing,0.6827
+T1498.002,Reflection Amplification,CAPEC-490,Amplification,0.6824
+T1036.012,Browser Fingerprint,CAPEC-170,Web Application Fingerprinting,0.6822
+T1133,External Remote Services,CAPEC-555,Remote Services with Stolen Credentials,0.6819
+T1185,Browser Session Hijacking,CAPEC-662,Adversary in the Browser (AiTB),0.6815
+T1542.001,System Firmware,CAPEC-532,Altered Installed BIOS,0.6812
+T1063,Security Software Discovery,CAPEC-581,Security Software Footprinting,0.6796
+T1036.009,Break Process Trees,CAPEC-640,Inclusion of Code in Existing Process,0.6795
+T1001.003,Protocol or Service Impersonation,CAPEC-217,Exploiting Incorrectly Configured SSL/TLS,0.6787
+T1010,Application Window Discovery,CAPEC-581,Security Software Footprinting,0.6786
+T1558.004,AS-REP Roasting,CAPEC-645,Use of Captured Tickets (Pass The Ticket),0.6781
+T1574.013,KernelCallbackTable,CAPEC-640,Inclusion of Code in Existing Process,0.678
+T1589.001,Credentials,CAPEC-600,Credential Stuffing,0.6779
+T1563,Remote Service Session Hijacking,CAPEC-196,Session Credential Falsification through Forging,0.6771
+T1505,Server Software Component,CAPEC-670,Software Development Tools Maliciously Altered,0.6764
+T1194,Spearphishing via Service,CAPEC-163,Spear Phishing,0.6754
+T1055.001,Dynamic-link Library Injection,CAPEC-640,Inclusion of Code in Existing Process,0.6752
+T1071.001,Web Protocols,CAPEC-220,Client-Server Protocol Manipulation,0.6749
+T1021.006,Windows Remote Management,CAPEC-569,Collect Data as Provided by Users,0.6748
+T1608.002,Upload Tool,CAPEC-670,Software Development Tools Maliciously Altered,0.6743
+T1015,Accessibility Features,CAPEC-270,Modification of Registry Run Keys,0.6741
+T1212,Exploitation for Credential Access,CAPEC-114,Authentication Abuse,0.6734
+T1588.002,Tool,CAPEC-581,Security Software Footprinting,0.6734
+T1016.001,Internet Connection Discovery,CAPEC-309,Network Topology Mapping,0.6732
+T1553,Subvert Trust Controls,CAPEC-581,Security Software Footprinting,0.6728
+T1055.004,Asynchronous Procedure Call,CAPEC-640,Inclusion of Code in Existing Process,0.6725
+T1587,Develop Capabilities,CAPEC-670,Software Development Tools Maliciously Altered,0.6724
+T1588.001,Malware,CAPEC-549,Local Execution of Code,0.6718
+T1569,System Services,CAPEC-642,Replace Binaries,0.6707
+T1548.002,Bypass User Account Control,CAPEC-234,Hijacking a privileged process,0.6705
+T1110.003,Password Spraying,CAPEC-565,Password Spraying,0.6697
+T1222,File and Directory Permissions Modification,CAPEC-597,Absolute Path Traversal,0.6691
+T1659,Content Injection,CAPEC-384,Application API Message Manipulation via Man-in-the-Middle,0.6684
+T1487,Disk Structure Wipe,CAPEC-638,Altered Component Firmware,0.6684
+T1583.006,Web Services,CAPEC-144,Detect Unpublicized Web Services,0.6683
+T1131,Authentication Package,CAPEC-579,Replace Winlogon Helper DLL,0.6682
+T1548.004,Elevated Execution with Prompt,CAPEC-660,Root/Jailbreak Detection Evasion via Hooking,0.6679
+T1514,Elevated Execution with Prompt,CAPEC-660,Root/Jailbreak Detection Evasion via Hooking,0.6679
+T1564.006,Run Virtual Instance,CAPEC-480,Escaping Virtualization,0.6678
+T1564.005,Hidden File System,CAPEC-597,Absolute Path Traversal,0.6669
+T1561.002,Disk Structure Wipe,CAPEC-638,Altered Component Firmware,0.6668
+T1060,Registry Run Keys / Startup Folder,CAPEC-270,Modification of Registry Run Keys,0.6667
+T1564.010,Process Argument Spoofing,CAPEC-640,Inclusion of Code in Existing Process,0.6657
+T1588.004,Digital Certificates,CAPEC-479,Malicious Root Certificate,0.6657
+T1562,Impair Defenses,CAPEC-578,Disable Security Software,0.6654
+T1595.001,Scanning IP Blocks,CAPEC-309,Network Topology Mapping,0.6654
+T1040,Network Sniffing,CAPEC-158,Sniffing Network Traffic,0.6651
+T1595.002,Vulnerability Scanning,CAPEC-309,Network Topology Mapping,0.6648
+T1583.002,DNS Server,CAPEC-142,DNS Cache Poisoning,0.6644
+T1018,Remote System Discovery,CAPEC-581,Security Software Footprinting,0.6642
+T1176.002,IDE Extensions,CAPEC-698,Install Malicious Extension,0.6635
+T1601.001,Patch System Image,REF-628,Root/Jailbreak Detection Evasion via Debugging,0.663
+T1561,Disk Wipe,CAPEC-638,Altered Component Firmware,0.663
+T1550.001,Application Access Token,CAPEC-633,Token Impersonation,0.6619
+T1574.004,Dylib Hijacking,CAPEC-471,Search Order Hijacking,0.6609
+T1586.001,Social Media Accounts,CAPEC-467,Cross Site Identification,0.6608
+T1566.003,Spearphishing via Service,CAPEC-163,Spear Phishing,0.6606
+T1114,Email Collection,CAPEC-194,Fake the Source of Data,0.6602
+T1554,Compromise Host Software Binary,CAPEC-552,Install Rootkit ,0.6601
+T1115,Clipboard Data,CAPEC-637,Collect Data from Clipboard,0.6601
+T1492,Stored Data Manipulation,CAPEC-536,Data Injected During Configuration,0.6599
+T1069.002,Domain Groups,CAPEC-576,Group Permission Footprinting,0.6599
+T1527,Application Access Token,CAPEC-633,Token Impersonation,0.6594
+T1546,Event Triggered Execution,CAPEC-510,SaaS User Request Forgery,0.6587
+T1098.007,Additional Local or Domain Groups,CAPEC-576,Group Permission Footprinting,0.6582
+T1671,Cloud Application Integration,CAPEC-510,SaaS User Request Forgery,0.6582
+T1565.001,Stored Data Manipulation,CAPEC-536,Data Injected During Configuration,0.6579
+T1606,Forge Web Credentials,CAPEC-196,Session Credential Falsification through Forging,0.6576
+T1494,Runtime Data Manipulation,CAPEC-444,Development Alteration,0.6575
+T1590.002,DNS,CAPEC-291,DNS Zone Transfers,0.6575
+T1652,Device Driver Discovery,CAPEC-646,Peripheral Footprinting,0.655
+T1584.005,Botnet,CAPEC-549,Local Execution of Code,0.655
+T1016.002,Wi-Fi Discovery,CAPEC-615,Evil Twin Wi-Fi Attack,0.6546
+T1134.001,Token Impersonation/Theft,CAPEC-633,Token Impersonation,0.6545
+T1565.003,Runtime Data Manipulation,CAPEC-536,Data Injected During Configuration,0.6542
+T1070,Indicator Removal,CAPEC-578,Disable Security Software,0.654
+T1027.006,HTML Smuggling,CAPEC-73,User-Controlled Filename,0.6531
+T1204.005,Malicious Library,CAPEC-549,Local Execution of Code,0.6529
+T1496,Resource Hijacking,CAPEC-131,Resource Leak Exposure,0.6529
+T1592.002,Software,CAPEC-581,Security Software Footprinting,0.6527
+T1025,Data from Removable Media,CAPEC-646,Peripheral Footprinting,0.6523
+T1672,Email Spoofing,CAPEC-151,Identity Spoofing,0.652
+T1204.001,Malicious Link,CAPEC-244,XSS Targeting URI Placeholders,0.6517
+T1011.001,Exfiltration Over Bluetooth,CAPEC-666,BlueSmacking,0.6516
+T1110,Brute Force,CAPEC-565,Password Spraying,0.651
+T1135,Network Share Discovery,CAPEC-643,Identify Shared Files/Directories on System,0.6505
+T1573,Encrypted Channel,CAPEC-88,OS Command Injection,0.65
