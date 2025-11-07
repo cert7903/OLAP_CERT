@@ -26,3 +26,10 @@ OLAP_CERT/
 │ └─ attack_capec_mapping.csv ← 실행 시 생성되는 매핑 파일
 ├─ README.md
 └─ requirements.txt
+
+```
+## 자동 업데이트
+
+이 리포지토리는 GitHub Actions를 사용하여 매일 최신 MITRE ATT&CK 및 CAPEC 데이터를 내려받아
+`mapping/attack_capec_mapping_with_tactic_and_desc.csv` 를 갱신합니다. 스케줄은 기본적으로 **KST 01:00**(UTC 16:00)로 설정되어 있으며,
+변경을 원하면 `.github/workflows/update-mapping.yml` 의 cron 항목을 수정하세요.
