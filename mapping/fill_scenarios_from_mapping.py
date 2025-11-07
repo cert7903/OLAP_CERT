@@ -6,6 +6,8 @@ fill_scenarios_from_mapping.py
 Sentence-BERT를 이용해 ATT&CK + CAPEC 매핑 결과에서 가장 유사한 항목을 찾아
 ATTACK_ID, ATTACK_NAME, CAPEC_ID, CAPEC_NAME를 자동 유추합니다.
 
+단, 유사도(SIMILARITY)가 0.7 미만이면 기존 내용(원본 CSV)을 그대로 유지합니다.
+
 입력:
     mapping/merged_mapping_report.csv
     mapping/full_attack_capec_mapping.csv
@@ -18,10 +20,17 @@ import numpy as np
 from sentence_transformers import SentenceTransformer, util
 from pathlib import Path
 
+# Sentence-BERT multilingual 모델 (한국어 지원)
 MODEL_NAME = "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
+
+# 파일 경로
 INPUT_FILE = Path("mapping/merged_mapping_report.csv")
 MAPPING_FILE = Path("mapping/full_attack_capec_mapping.csv")
 OUTPUT_FILE = Path("mapping/merged_mapping_report_filled.csv")
+
+# 유사도 임계값
+SIM_THRESHOLD = 0.7
+
 
 def main():
     print("[+] Loading Sentence-BERT model...")
@@ -36,33 +45,48 @@ def main():
 
     print(f"[+] Loading scenario file: {INPUT_FILE}")
     scen_df = pd.read_csv(INPUT_FILE, dtype=str).fillna("")
+
     if "시나리오명" not in scen_df.columns:
         raise ValueError("입력 파일에 '시나리오명' 컬럼이 없습니다. 컬럼 이름을 확인하세요.")
 
     results = []
     for i, row in scen_df.iterrows():
         scenario = row["시나리오명"]
+        original = row.to_dict()  # 원본 데이터 백업
+
         if not scenario.strip():
+            results.append(original)
             continue
+
         query_emb = model.encode(scenario, convert_to_tensor=True)
         sims = util.cos_sim(query_emb, mapping_embeddings)[0]
         top_idx = int(np.argmax(sims))
-        best = mapping_df.iloc[top_idx]
         sim_score = float(sims[top_idx])
-        results.append({
-            "시나리오명": scenario,
-            "ATTACK_ID": best["ATTACK_ID"],
-            "ATTACK_NAME": best["ATTACK_NAME"],
-            "CAPEC_ID": best["CAPEC_ID"],
-            "CAPEC_NAME": best["CAPEC_NAME"],
-            "SIMILARITY": round(sim_score, 4)
-        })
+        best = mapping_df.iloc[top_idx]
+
+        if sim_score >= SIM_THRESHOLD:
+            # 유사도 기준 이상일 경우 → 자동 매핑 정보로 덮어쓰기
+            original.update({
+                "ATTACK_ID": best["ATTACK_ID"],
+                "ATTACK_NAME": best["ATTACK_NAME"],
+                "CAPEC_ID": best["CAPEC_ID"],
+                "CAPEC_NAME": best["CAPEC_NAME"],
+                "SIMILARITY": round(sim_score, 4)
+            })
+        else:
+            # 유사도 낮으면 기존 내용 유지 + SIMILARITY만 업데이트
+            original["SIMILARITY"] = round(sim_score, 4)
+
+        results.append(original)
 
     out_df = pd.DataFrame(results)
     OUTPUT_FILE.parent.mkdir(parents=True, exist_ok=True)
     out_df.to_csv(OUTPUT_FILE, index=False, encoding="utf-8-sig")
+
+    valid_count = (out_df["SIMILARITY"].astype(float) >= SIM_THRESHOLD).sum()
     print(f"[+] 결과 저장 완료: {OUTPUT_FILE}")
-    print(f"[+] 총 {len(out_df)}건의 시나리오 매핑 완료!")
+    print(f"[+] 총 {len(out_df)}건 중 {valid_count}건이 유사도 {SIM_THRESHOLD} 이상으로 자동 매핑되었습니다!")
+
 
 if __name__ == "__main__":
     main()
