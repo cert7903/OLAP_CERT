@@ -1,0 +1,46 @@
+﻿시나리오명,ATTACK_ID,ATTACK_NAME,CAPEC_ID,CAPEC_NAME,SIMILARITY
+shell 명령어 사용 탐지,T1157,Dylib Hijacking,CAPEC-471,Search Order Hijacking,0.4691
+vpn 클라이언트 탐지,T1194,Spearphishing via Service,CAPEC-163,Spear Phishing,0.3696
+미식별 에이전트 탐지,T1194,Spearphishing via Service,CAPEC-163,Spear Phishing,0.4727
+익스플로잇 패턴 취약점 탐지,T1157,Dylib Hijacking,CAPEC-471,Search Order Hijacking,0.3743
+php 확장자가 포함된 공격 탐지,T1023,Shortcut Modification,CAPEC-132,Symlink Attack,0.5404
+악성요청 탐지,T1193,Spearphishing Attachment,CAPEC-163,Spear Phishing,0.431
+히든파일 접근 탐지,T1034,Path Interception,CAPEC-159,Redirect Access to Libraries,0.4862
+"검색엔진, sns, vpn 클라이언트 등 에이전트 (봇) 접근 탐지",T1194,Spearphishing via Service,CAPEC-163,Spear Phishing,0.5231
+디렉토리 트래버셜 공격 탐지,T1157,Dylib Hijacking,CAPEC-471,Search Order Hijacking,0.4602
+비정상 크롬브라우저 버전을 이용한 익스플로잇 패턴 탐지,T1157,Dylib Hijacking,CAPEC-471,Search Order Hijacking,0.2801
+서버오류 (상태코드 5XX),T1076,Remote Desktop Protocol,CAPEC-555,Remote Services with Stolen Credentials,0.4248
+서버오류 (상태코드 4XX),T1194,Spearphishing via Service,CAPEC-163,Spear Phishing,0.4166
+악성 평판인 출발지IP에서 접근 탐지,T1194,Spearphishing via Service,CAPEC-163,Spear Phishing,0.4809
+알려지지 않은 웹스캐너 접근 탐지,T1574.001,DLL,CAPEC-471,Search Order Hijacking,0.412
+알려진 웹스캐너 접근 탐지,T1157,Dylib Hijacking,CAPEC-471,Search Order Hijacking,0.4076
+"웹서버공격시도, 웹쉘명령 이벤트 탐지",T1574.001,DLL,CAPEC-471,Search Order Hijacking,0.5293
+내부에서 외부로 RAT 전송패턴 탐지,T1192,Spearphishing Link,CAPEC-163,Spear Phishing,0.3225
+내부에서 외부로 smb/rdp 전송패턴 탐지,T1552.001,Credentials In Files,CAPEC-639,Probe System Files,0.3501
+내부에서 외부로 smtp 메일 전송패턴 탐지,T1194,Spearphishing via Service,CAPEC-163,Spear Phishing,0.3641
+내부에서 외부로 대량의 유튜브 전송패턴 탐지,T1056.002,GUI Input Capture,CAPEC-569,Collect Data as Provided by Users,0.2831
+내부에서 외부로 대량의 카카오톡 전송패턴 탐지,T1157,Dylib Hijacking,CAPEC-471,Search Order Hijacking,0.3397
+"기타, CVE 취약점 정보 탐지",T1552.001,Credentials In Files,CAPEC-639,Probe System Files,0.5529
+"복합, 웹방화벽에서 차단된 IP, 다른 호스트로 탐지",T1054,Indicator Blocking,CAPEC-571,Block Logging to Central Repository,0.4827
+"복합, CTAS 위협IP에서 웹로그로 위협이벤트 탐지",T1051,Shared Webroot,CAPEC-563,Add Malicious File to Shared Webroot,0.4671
+"복합, 방화벽에서 상위 TOP10 IP 중, 웹방화벽에서 웹스캐닝으로 탐지",T1051,Shared Webroot,CAPEC-563,Add Malicious File to Shared Webroot,0.3604
+"복합, CTAS 요주의 IP에서 방화벽 등으로 유입되는 이벤트 탐지",T1054,Indicator Blocking,CAPEC-571,Block Logging to Central Repository,0.4066
+"복합, 방화벽에서 상위 TOP 10 IP중에서 CTAS 배포사이트 IP로 접근 탐지",T1054,Indicator Blocking,CAPEC-571,Block Logging to Central Repository,0.3905
+아파치 스트럿 패턴 공격 이벤트 탐지,T1192,Spearphishing Link,CAPEC-163,Spear Phishing,0.3938
+cli명령 패턴 이벤트 탐지,T1157,Dylib Hijacking,CAPEC-471,Search Order Hijacking,0.4082
+injection 패턴 공격 이벤트 탐지,T1023,Shortcut Modification,CAPEC-132,Symlink Attack,0.4213
+log4shell 패턴 공격 이벤트 탐지,T1562.003,Impair Command History Logging,CAPEC-13,Subverting Environment Variable Values,0.4665
+RFI/LFI 패턴 공격 이벤트 탐지,T1562.003,Impair Command History Logging,CAPEC-13,Subverting Environment Variable Values,0.3752
+XSS 패턴 공격 이벤트 탐지,T1023,Shortcut Modification,CAPEC-132,Symlink Attack,0.3722
+경로우회 공격 패턴 이벤트 탐지,T1157,Dylib Hijacking,CAPEC-471,Search Order Hijacking,0.443
+비정상 user-agent 패턴 공격 이벤트 탐지,T1157,Dylib Hijacking,CAPEC-471,Search Order Hijacking,0.4853
+비정상 헤더 패턴 공격 이벤트 탐지,T1157,Dylib Hijacking,CAPEC-471,Search Order Hijacking,0.4548
+"비정상 통신(smtp, rtsp 등) 패턴 공격 이벤트 탐지",T1023,Shortcut Modification,CAPEC-132,Symlink Attack,0.4477
+스캐닝 패턴 공격 이벤트 탐지,T1157,Dylib Hijacking,CAPEC-471,Search Order Hijacking,0.4066
+웹쉘 업로드 패턴 공격 이벤트 탐지,T1023,Shortcut Modification,CAPEC-132,Symlink Attack,0.5207
+유효하지 않은 공격 패턴 이벤트 탐지,T1157,Dylib Hijacking,CAPEC-471,Search Order Hijacking,0.4201
+익스플로잇 패턴 공격 이벤트 탐지,T1157,Dylib Hijacking,CAPEC-471,Search Order Hijacking,0.4188
+"자동화(java, python 등) 봇 에이전트 패턴 공격 이벤트 탐지",T1157,Dylib Hijacking,CAPEC-471,Search Order Hijacking,0.4414
+파라미터변조 패턴 공격 이벤트 탐지,T1157,Dylib Hijacking,CAPEC-471,Search Order Hijacking,0.3695
+ 자동화(java python 등) 봇 에이전트 패턴 공격 이벤트 탐지,T1023,Shortcut Modification,CAPEC-132,Symlink Attack,0.4217
+파라미터변조 패턴 공격 이벤트 탐지	,T1157,Dylib Hijacking,CAPEC-471,Search Order Hijacking,0.3695
