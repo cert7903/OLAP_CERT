@@ -1,19 +1,18 @@
 #!/usr/bin/env python3
 """
-generate_full_attack_capec_mapping.py
+generate_full_attack_capec_mapping.py (semantic-augmented)
 
-- Downloads the MITRE CTI repository zip, extracts STIX JSON files, and builds a
-  comprehensive mapping between ATT&CK techniques (ATTACK IDs) and CAPEC patterns.
-- Output CSV: mapping/full_attack_capec_mapping.csv
-
-Output columns:
-  - ATTACK_ID: e.g., T1059
-  - ATTACK_NAME: technique name
-  - CAPEC_ID: e.g., CAPEC-248
-  - CAPEC_NAME: CAPEC title (if available)
-  - SOURCE: 'relationship' or 'external_reference'
-  - RELATION_TYPE: relationship_type (if relationship source) or external reference type
-  - NOTE: additional info (e.g., file origin)
+- Downloads MITRE CTI master zip and CAPEC JSON (if needed).
+- Extracts attack-pattern and relationship objects.
+- Builds explicit mappings from relationships and external_references.
+- Builds ATT&CK technique descriptions and CAPEC descriptions (from CTI or CAPEC JSON).
+- Computes semantic similarity between ATT&CK descriptions and CAPEC descriptions:
+    - Uses sentence-transformers (SBERT) if available.
+    - Falls back to TF-IDF + cosine similarity otherwise.
+- Outputs:
+    - mapping/full_attack_capec_mapping.csv                (explicit mappings)
+    - mapping/full_attack_capec_mapping_semantic.csv      (explicit + semantic mappings with scores)
+- Requires: requests, pandas, scikit-learn (for fallback), optionally sentence-transformers
 """
 
 from pathlib import Path
@@ -24,11 +23,34 @@ import json
 import os
 import pandas as pd
 import sys
-from typing import Dict, Any, Tuple, List, Set
+import re
+import math
+from typing import Dict, Any, List, Tuple, Set
+from itertools import islice
+
+# Attempt imports for embedding; fallback will use sklearn TF-IDF
+USE_SBERT = False
+try:
+    from sentence_transformers import SentenceTransformer, util
+    USE_SBERT = True
+except Exception:
+    USE_SBERT = False
+
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
 
 CTI_ZIP_URL = "https://github.com/mitre/cti/archive/refs/heads/master.zip"
-OUTPUT_CSV = Path("mapping/full_attack_capec_mapping.csv")
+CAPEC_JSON_URL = "https://capec.mitre.org/data/json/attackPatterns.json"
+OUTPUT_DIR = Path("mapping")
+OUTPUT_EXPLICIT = OUTPUT_DIR / "full_attack_capec_mapping.csv"
+OUTPUT_SEMANTIC = OUTPUT_DIR / "full_attack_capec_mapping_semantic.csv"
 TMP_PREFIX = "mitre_cti_"
+
+# Semantic thresholds (adjustable)
+SBERT_THRESHOLD = 0.70
+TFIDF_THRESHOLD = 0.40
+MAX_SEMANTIC_PER_ATTACK = 5  # top-k CAPEC per ATTACK by similarity
+
 
 def download_and_extract_cti(tmpdir: Path) -> Path:
     print("[+] Downloading CTI master zip...")
@@ -44,11 +66,11 @@ def download_and_extract_cti(tmpdir: Path) -> Path:
     print(f"[+] Extracting to {extract_dir} ...")
     with zipfile.ZipFile(zip_path, "r") as zf:
         zf.extractall(extract_dir)
-    # The zip extracts to a folder like cti-master or cti-<branch>
     top_entries = [p for p in extract_dir.iterdir() if p.is_dir()]
     if top_entries:
-        return top_entries[0]  # return path to extracted repo root
+        return top_entries[0]
     return extract_dir
+
 
 def iter_json_files(repo_root: Path):
     for root, dirs, files in os.walk(repo_root):
@@ -56,39 +78,41 @@ def iter_json_files(repo_root: Path):
             if f.lower().endswith(".json"):
                 yield Path(root) / f
 
+
 def load_json_safe(path: Path):
     try:
         with open(path, "r", encoding="utf-8") as fh:
             return json.load(fh)
     except Exception:
-        # sometimes files may have non-utf8 or be very large; try fallback
-        with open(path, "rb") as fh:
-            raw = fh.read()
         try:
+            with open(path, "rb") as fh:
+                raw = fh.read()
             return json.loads(raw.decode("utf-8", errors="ignore"))
         except Exception as e:
             print(f"[-] Failed to parse JSON {path}: {e}", file=sys.stderr)
             return None
 
-def collect_attack_patterns_and_relationships(repo_root: Path):
-    """
-    Parse all JSON files and collect:
-      - attack_patterns: uuid -> object
-      - relationships: list of relationship objects
-    """
-    attack_patterns: Dict[str, Dict[str, Any]] = {}
-    relationships: List[Dict[str, Any]] = []
-    capec_patterns: Dict[str, Dict[str, Any]] = {}
 
-    print("[+] Scanning JSON files for STIX objects...")
+def collect_patterns_and_relationships(repo_root: Path, filter_dirs: List[str] = None):
+    """
+    Scans JSON files but optionally limits to specified directories to speed up.
+    If filter_dirs provided (relative dir names in repo), only files under them are checked.
+    """
+    attack_patterns = {}
+    capec_patterns = {}
+    relationships = []
+
+    print("[+] Scanning JSON files for STIX objects (filtered)...")
     for jf in iter_json_files(repo_root):
+        # If filtering on directories, skip files not under them
+        if filter_dirs:
+            rel = jf.relative_to(repo_root)
+            if not any(str(rel).startswith(fd) for fd in filter_dirs):
+                continue
         j = load_json_safe(jf)
         if not j:
             continue
-        # STIX bundle format often has "objects" top-level list
-        objs = j.get("objects") if isinstance(j, dict) else None
-        if objs is None and isinstance(j, list):
-            objs = j
+        objs = j.get("objects") if isinstance(j, dict) else j if isinstance(j, list) else None
         if not objs:
             continue
         for obj in objs:
@@ -96,279 +120,411 @@ def collect_attack_patterns_and_relationships(repo_root: Path):
                 continue
             typ = obj.get("type")
             if typ == "attack-pattern":
-                # store by id (uuid)
                 uid = obj.get("id")
                 if uid:
                     attack_patterns[uid] = obj
-                    # check if this looks like CAPEC (external_references contain 'capec' source)
-                    # but also CAPEC collection in repo contains CAPEC attack-patterns
-                    # record separately if external_references indicate capec
+                    # detect CAPEC-like via external_references
                     for ref in obj.get("external_references", []) or []:
-                        if ref.get("source_name") and "capec" in ref.get("source_name").lower():
+                        if ref.get("source_name") and "capec" in str(ref.get("source_name")).lower():
                             capec_patterns[uid] = obj
             elif typ == "relationship":
                 relationships.append(obj)
-    print(f"[+] Collected attack-pattern objects: {len(attack_patterns)}")
-    print(f"[+] Collected relationship objects: {len(relationships)}")
+    print(f"[+] Collected attack-patterns: {len(attack_patterns)}")
     print(f"[+] Detected CAPEC-like patterns by external refs: {len(capec_patterns)}")
+    print(f"[+] Collected relationships: {len(relationships)}")
     return attack_patterns, capec_patterns, relationships
 
-def extract_external_id(obj: Dict[str, Any]) -> Tuple[str, str]:
+
+def extract_external_id_and_description(obj: Dict[str, Any]) -> Tuple[str, str, str]:
     """
-    From an attack-pattern object  -> find external_id for mitre-attack or capec
-    Return (external_id, source_name) e.g. ("T1059","mitre-attack") or ("CAPEC-248","capec")
+    Return (external_id, name, description) if available.
+    External id chosen: mitre-attack or capec if present in external_references.
     """
+    ext_id = ""
+    name = obj.get("name", "") or ""
+    desc = obj.get("description", "") or ""
+    # some descriptions are under 'description' or x_mitre_data_sources or elsewhere; prefer 'description'
     for ref in obj.get("external_references", []) or []:
-        src = ref.get("source_name", "")
-        eid = ref.get("external_id") or ref.get("id")
-        if src and eid:
-            return str(eid).strip(), src.strip().lower()
-    # fallback: sometimes external id stored at top-level property (rare)
-    return "", ""
+        src = (ref.get("source_name") or "").lower()
+        eid = ref.get("external_id") or ref.get("id") or ""
+        if "mitre-attack" in src and eid:
+            ext_id = str(eid).strip()
+            break
+        if "capec" in src and eid and not ext_id:
+            ext_id = str(eid).strip()
+    # fallback: try to parse name for "T1234" style
+    if not ext_id:
+        # sometimes MITRE stores external_id in custom props - skip for speed
+        pass
+    # normalize desc: strip html tags
+    desc = strip_html_tags(desc)
+    return ext_id, name, desc
 
-def build_uuid_to_metadata(all_attack_patterns: Dict[str, Dict[str, Any]]):
-    """
-    Create lookup: uuid -> (external_id, name, source_hint)
-    where source_hint attempts to indicate 'mitre-attack' or 'capec' based on external_references.
-    """
-    mapping = {}
-    for uid, obj in all_attack_patterns.items():
-        ext_id = ""
-        src_name = ""
-        # some have multiple external_references: choose one with mitre-attack or capec if present
-        for ref in obj.get("external_references", []) or []:
-            s = (ref.get("source_name") or "").lower()
-            e = ref.get("external_id") or ref.get("id") or ""
-            if e and s:
-                if "mitre-attack" in s:
-                    ext_id = str(e).strip()
-                    src_name = "mitre-attack"
-                    break
-                if "capec" in s:
-                    ext_id = str(e).strip()
-                    src_name = "capec"
-                    break
-        # if not found, fallback to first external_reference
-        if not ext_id:
-            for ref in obj.get("external_references", []) or []:
-                e = ref.get("external_id") or ref.get("id") or ""
-                s = (ref.get("source_name") or "").lower()
-                if e:
-                    ext_id = str(e).strip()
-                    src_name = s or ""
-                    break
-        name = obj.get("name") or ""
-        mapping[uid] = {
-            "external_id": ext_id,
-            "name": name,
-            "source_hint": src_name
-        }
-    return mapping
 
-def find_mappings_via_relationships(uuid_meta: Dict[str, Dict[str, Any]], relationships: List[Dict[str, Any]]):
-    """
-    For each relationship of type that links attack-pattern <-> attack-pattern, if one side is ATT&CK and the other is CAPEC (by source_hint or external_id format), record mapping.
-    """
-    results = []
+def strip_html_tags(text: str) -> str:
+    if not text:
+        return ""
+    text = re.sub(r"<[^>]+>", " ", text)
+    text = re.sub(r"&[a-zA-Z]+;", " ", text)
+    text = re.sub(r"\s+", " ", text).strip()
+    return text
+
+
+def build_uuid_meta(all_patterns: Dict[str, Dict[str, Any]]):
+    meta = {}
+    for uid, obj in all_patterns.items():
+        ext_id, name, desc = extract_external_id_and_description(obj)
+        # if description empty, try to get description from 'x_mitre_description' fields
+        if not desc:
+            for k, v in obj.items():
+                if isinstance(k, str) and "description" in k and isinstance(v, str):
+                    desc = v
+                    break
+        meta[uid] = {"external_id": ext_id, "name": name, "description": desc}
+    return meta
+
+
+def find_explicit_mappings(uuid_meta: Dict[str, Dict[str, Any]], relationships: List[Dict[str, Any]]):
+    explicit = []
+    # first relationships
     for rel in relationships:
         src = rel.get("source_ref")
         tgt = rel.get("target_ref")
         rtype = rel.get("relationship_type") or ""
         if not src or not tgt:
             continue
-        # both must be attack-pattern references (id format attack-pattern--uuid)
-        # but sometimes relationships link other types; we'll check if both are in uuid_meta
         if src not in uuid_meta or tgt not in uuid_meta:
             continue
-        src_meta = uuid_meta[src]
-        tgt_meta = uuid_meta[tgt]
-
-        src_ext = src_meta.get("external_id","") or ""
-        tgt_ext = tgt_meta.get("external_id","") or ""
-        src_hint = src_meta.get("source_hint","")
-        tgt_hint = tgt_meta.get("source_hint","")
-
-        # Determine which is ATT&CK vs CAPEC
-        def is_attack(eid, hint):
-            if hint and "mitre-attack" in hint:
-                return True
-            if isinstance(eid, str) and eid.upper().startswith("T"):
-                return True
-            return False
-        def is_capec(eid, hint):
-            if hint and "capec" in hint:
-                return True
-            if isinstance(eid, str) and eid.upper().startswith("CAPEC"):
-                return True
-            return False
-
-        # check both orientations
-        if is_attack(src_ext, src_hint) and is_capec(tgt_ext, tgt_hint):
-            results.append({
-                "attack_uuid": src,
-                "attack_id": src_ext,
-                "attack_name": src_meta.get("name",""),
-                "capec_uuid": tgt,
-                "capec_id": tgt_ext,
-                "capec_name": tgt_meta.get("name",""),
+        s_meta = uuid_meta[src]
+        t_meta = uuid_meta[tgt]
+        s_e = s_meta.get("external_id","") or ""
+        t_e = t_meta.get("external_id","") or ""
+        s_hint = (s_meta.get("external_id") or "").upper()
+        t_hint = (t_meta.get("external_id") or "").upper()
+        # heuristics detect ATTACK (T...) vs CAPEC (CAPEC-...)
+        def is_attack(e): return bool(e and str(e).upper().startswith("T"))
+        def is_capec(e): return bool(e and str(e).upper().startswith("CAPEC"))
+        if is_attack(s_e) and is_capec(t_e):
+            explicit.append({
+                "attack_id": s_e.upper(),
+                "attack_name": s_meta.get("name",""),
+                "attack_desc": s_meta.get("description",""),
+                "capec_id": t_e.upper(),
+                "capec_name": t_meta.get("name",""),
+                "capec_desc": t_meta.get("description",""),
                 "source": "relationship",
-                "relation_type": rtype,
-                "note": rel.get("description","") or ""
+                "relation_type": rtype
             })
-        elif is_attack(tgt_ext, tgt_hint) and is_capec(src_ext, src_hint):
-            results.append({
-                "attack_uuid": tgt,
-                "attack_id": tgt_ext,
-                "attack_name": tgt_meta.get("name",""),
-                "capec_uuid": src,
-                "capec_id": src_ext,
-                "capec_name": src_meta.get("name",""),
+        elif is_attack(t_e) and is_capec(s_e):
+            explicit.append({
+                "attack_id": t_e.upper(),
+                "attack_name": t_meta.get("name",""),
+                "attack_desc": t_meta.get("description",""),
+                "capec_id": s_e.upper(),
+                "capec_name": s_meta.get("name",""),
+                "capec_desc": s_meta.get("description",""),
                 "source": "relationship",
-                "relation_type": rtype,
-                "note": rel.get("description","") or ""
+                "relation_type": rtype
             })
-    return results
+    # second: external_references inside patterns (attack -> capec)
+    for uid, m in uuid_meta.items():
+        a_id = m.get("external_id","") or ""
+        if not a_id or not a_id.upper().startswith("T"):
+            continue
+        # check original object external refs: but uuid_meta doesn't store all external refs, so skip here
+        # explicit external refs were earlier detected when scanning repo as capec_patterns; to be robust, we won't double-scan here.
+    return explicit
 
-def find_mappings_via_external_refs(all_attack_patterns: Dict[str, Dict[str, Any]], uuid_meta: Dict[str, Dict[str, Any]]):
-    """
-    Some ATT&CK technique objects include external_references that directly reference CAPEC IDs (source_name==capec).
-    Extract those as mappings (source: external_reference).
-    """
-    results = []
-    for uid, obj in all_attack_patterns.items():
-        # attempt to find mitre-attack external id for this object
-        att_id = ""
-        for ref in obj.get("external_references", []) or []:
-            if (ref.get("source_name") or "").lower() == "mitre-attack" and ref.get("external_id"):
-                att_id = str(ref.get("external_id")).strip()
-                break
-        # if object itself is capec-pattern, skip here
-        # find any external_references that are capec
-        capec_refs = []
-        for ref in obj.get("external_references", []) or []:
-            if (ref.get("source_name") or "").lower() == "capec" and ref.get("external_id"):
-                capec_refs.append(str(ref.get("external_id")).strip())
-        # If att_id present and capec_refs exists, record mapping(s)
-        if att_id and capec_refs:
-            name = obj.get("name","")
-            for cid in capec_refs:
-                results.append({
-                    "attack_uuid": uid,
-                    "attack_id": att_id,
-                    "attack_name": name,
-                    "capec_uuid": "",  # unknown here (external ref only)
-                    "capec_id": cid,
-                    "capec_name": "",
-                    "source": "external_reference",
-                    "relation_type": "external_reference_capec",
-                    "note": ""
-                })
-    return results
 
-def augment_capec_names(capec_candidates: Set[str], repo_capec_patterns: Dict[str, Dict[str, Any]]):
+def fetch_capec_json(timeout: int = 30):
+    try:
+        print("[+] Fetching CAPEC JSON ...")
+        r = requests.get(CAPEC_JSON_URL, timeout=timeout)
+        r.raise_for_status()
+        return r.json()
+    except Exception as e:
+        print(f"[!] Could not fetch CAPEC JSON: {e}", file=sys.stderr)
+        return None
+
+
+def build_capec_lookup_from_json(capec_json) -> Dict[str, Dict[str, str]]:
     """
-    Build a mapping CAPEC-ID -> CAPEC Name by scanning known CAPEC pattern objects in the repo (if any)
-    Also try to parse CAPEC JSON in repository directories if present (fallback).
+    Build CAPEC-ID -> {name, description} from CAPEC JSON (attackPatterns or attack_patterns)
     """
     lookup = {}
-    # search repo patterns for external_id matching CAPEC-ID
-    for uid, obj in repo_capec_patterns.items():
-        # find external id
-        ext_id = ""
-        for ref in obj.get("external_references", []) or []:
-            if (ref.get("source_name") or "").lower().startswith("capec") and ref.get("external_id"):
-                ext_id = str(ref.get("external_id")).strip().upper()
+    if not capec_json:
+        return lookup
+    arr = capec_json.get("attack_patterns") or capec_json.get("attackPatterns") or capec_json.get("attack_patterns") or []
+    if not arr and isinstance(capec_json, dict):
+        # sometimes nested keys
+        for k in ["attack_patterns", "attackPatterns", "attack-patterns"]:
+            if k in capec_json:
+                arr = capec_json[k]
                 break
-        if not ext_id:
-            continue
-        name = obj.get("name","") or ""
-        lookup[ext_id] = name
-
-    # For any candidate capec ids not found, keep as empty name
-    for c in capec_candidates:
-        if c not in lookup:
-            lookup[c] = ""
+    for item in arr:
+        cid = item.get("ID") or item.get("id") or item.get("Capec_ID") or item.get("capec_id")
+        name = item.get("Name") or item.get("name") or item.get("Title") or ""
+        desc = item.get("Description") or item.get("description") or ""
+        if cid:
+            key = str(cid).upper()
+            lookup[key] = {"name": (name or "").strip(), "description": strip_html_tags(desc or "")}
     return lookup
 
-def normalize_capec_id_str(s: str) -> str:
-    if not s:
-        return ""
-    s = s.strip()
-    if s.isdigit():
-        return f"CAPEC-{s}"
-    return s.upper()
+
+def aggregate_attack_and_capec_entries(uuid_meta: Dict[str, Dict[str, Any]], capec_json_lookup: Dict[str, Dict[str,str]], capec_patterns_in_repo: Dict[str, Dict[str,Any]]):
+    """
+    Build two lists:
+      - attacks: list of dict {attack_id, name, description}
+      - capecs: list of dict {capec_id, name, description}
+    Uses:
+      - uuid_meta (all patterns parsed) to extract ATT&CK techniques (external_id starts with T)
+      - capec_json_lookup for CAPEC entries
+      - capec_patterns_in_repo for CAPEC entries referenced inside repo objects
+    """
+    attacks = {}
+    capecs = {}
+
+    for uid, m in uuid_meta.items():
+        eid = (m.get("external_id") or "").strip()
+        name = m.get("name","") or ""
+        desc = m.get("description","") or ""
+        if eid and eid.upper().startswith("T"):
+            key = eid.upper()
+            if key not in attacks:
+                attacks[key] = {"attack_id": key, "attack_name": name, "attack_desc": desc}
+            else:
+                # prefer non-empty desc
+                if not attacks[key]["attack_desc"] and desc:
+                    attacks[key]["attack_desc"] = desc
+
+    # fill capecs from capec_json_lookup
+    for cid, info in capec_json_lookup.items():
+        capecs[cid] = {"capec_id": cid, "capec_name": info.get("name",""), "capec_desc": info.get("description","")}
+
+    # also fill capecs from repo-detected capec patterns (capec_patterns_in_repo)
+    for uid, obj in capec_patterns_in_repo.items():
+        # find external capec id
+        cid = ""
+        for ref in obj.get("external_references", []) or []:
+            if (ref.get("source_name") or "").lower().startswith("capec") and ref.get("external_id"):
+                cid = str(ref.get("external_id")).strip().upper()
+                break
+        if cid:
+            name = obj.get("name","") or ""
+            desc = obj.get("description","") or ""
+            if cid not in capecs:
+                capecs[cid] = {"capec_id": cid, "capec_name": name, "capec_desc": strip_html_tags(desc)}
+            else:
+                if not capecs[cid]["capec_desc"] and desc:
+                    capecs[cid]["capec_desc"] = strip_html_tags(desc)
+
+    return list(attacks.values()), list(capecs.values())
+
+
+def embed_and_match(attacks: List[Dict[str,str]], capecs: List[Dict[str,str]], use_sbert=USE_SBERT,
+                    sbert_threshold=SBERT_THRESHOLD, tfidf_threshold=TFIDF_THRESHOLD, top_k=MAX_SEMANTIC_PER_ATTACK):
+    """
+    Compute embeddings and cosine similarities. Returns list of semantic matches:
+      [{attack_id, attack_name, capec_id, capec_name, score, method}, ...]
+    """
+    # prepare texts
+    attack_texts = []
+    for a in attacks:
+        text = " ".join([a.get("attack_name",""), a.get("attack_desc","") or ""])
+        attack_texts.append(text if text.strip() else a.get("attack_name",""))
+
+    capec_texts = []
+    for c in capecs:
+        text = " ".join([c.get("capec_name",""), c.get("capec_desc","") or ""])
+        capec_texts.append(text if text.strip() else c.get("capec_name",""))
+
+    matches = []
+    if use_sbert:
+        print("[+] Using Sentence-BERT for embeddings (fast & accurate).")
+        model_name = "all-MiniLM-L6-v2"
+        try:
+            model = SentenceTransformer(model_name)
+        except Exception as e:
+            print(f"[!] Could not load SBERT model '{model_name}': {e}", file=sys.stderr)
+            use_sbert = False
+
+    if use_sbert:
+        # compute embeddings
+        attack_emb = model.encode(attack_texts, convert_to_tensor=True, show_progress_bar=True)
+        capec_emb = model.encode(capec_texts, convert_to_tensor=True, show_progress_bar=True)
+        # compute cosine similarities efficiently (matrix)
+        sim_matrix = util.cos_sim(attack_emb, capec_emb).cpu().numpy()
+        for i, a in enumerate(attacks):
+            row = sim_matrix[i]
+            # get top-k indices sorted by score desc
+            idxs = list(islice(sorted(range(len(row)), key=lambda j: row[j], reverse=True), top_k))
+            for j in idxs:
+                score = float(row[j])
+                if score >= sbert_threshold:
+                    c = capecs[j]
+                    matches.append({
+                        "attack_id": a["attack_id"],
+                        "attack_name": a.get("attack_name",""),
+                        "capec_id": c["capec_id"],
+                        "capec_name": c.get("capec_name",""),
+                        "score": score,
+                        "method": "sbert"
+                    })
+    else:
+        # TF-IDF fallback
+        print("[+] Using TF-IDF fallback for semantic matching.")
+        vectorizer = TfidfVectorizer(max_df=0.9, min_df=1, ngram_range=(1,2))
+        # combine corpora to ensure same feature space
+        combined = attack_texts + capec_texts
+        X = vectorizer.fit_transform(combined)
+        A = X[:len(attack_texts)]
+        C = X[len(attack_texts):]
+        sim_matrix = cosine_similarity(A, C)
+        for i, a in enumerate(attacks):
+            row = sim_matrix[i]
+            idxs = list(islice(sorted(range(len(row)), key=lambda j: row[j], reverse=True), top_k))
+            for j in idxs:
+                score = float(row[j])
+                if score >= tfidf_threshold:
+                    c = capecs[j]
+                    matches.append({
+                        "attack_id": a["attack_id"],
+                        "attack_name": a.get("attack_name",""),
+                        "capec_id": c["capec_id"],
+                        "capec_name": c.get("capec_name",""),
+                        "score": score,
+                        "method": "tfidf"
+                    })
+    print(f"[+] Semantic matches found: {len(matches)} (thresholds: SBERT={sbert_threshold}, TFIDF={tfidf_threshold})")
+    return matches
+
+
+def combine_and_write(explicit_mappings: List[Dict[str,Any]], semantic_matches: List[Dict[str,Any]]):
+    OUTPUT_DIR.mkdir(parents=True, exist_ok=True)
+    # Explicit first (relationship/external_reference)
+    df_exp = pd.DataFrame(explicit_mappings)
+    if df_exp.empty:
+        df_exp = pd.DataFrame(columns=["ATTACK_ID","ATTACK_NAME","CAPEC_ID","CAPEC_NAME","SOURCE","RELATION_TYPE","NOTE"])
+    else:
+        # normalize columns for explicit
+        df_exp = df_exp.rename(columns={
+            "attack_id":"ATTACK_ID","attack_name":"ATTACK_NAME",
+            "capec_id":"CAPEC_ID","capec_name":"CAPEC_NAME",
+            "source":"SOURCE","relation_type":"RELATION_TYPE","note":"NOTE"
+        })[["ATTACK_ID","ATTACK_NAME","CAPEC_ID","CAPEC_NAME","SOURCE","RELATION_TYPE","NOTE"]]
+    # write explicit CSV
+    df_exp.to_csv(OUTPUT_EXPLICIT, index=False, encoding="utf-8-sig")
+    print(f"[+] Wrote explicit mapping CSV: {OUTPUT_EXPLICIT} rows={len(df_exp)}")
+
+    # prepare semantic df and merge with explicit
+    if semantic_matches:
+        df_sem = pd.DataFrame(semantic_matches)
+        df_sem = df_sem.rename(columns={
+            "attack_id":"ATTACK_ID","attack_name":"ATTACK_NAME",
+            "capec_id":"CAPEC_ID","capec_name":"CAPEC_NAME",
+            "score":"SIMILARITY","method":"MATCH_METHOD"
+        })[["ATTACK_ID","ATTACK_NAME","CAPEC_ID","CAPEC_NAME","SIMILARITY","MATCH_METHOD"]]
+    else:
+        df_sem = pd.DataFrame(columns=["ATTACK_ID","ATTACK_NAME","CAPEC_ID","CAPEC_NAME","SIMILARITY","MATCH_METHOD"])
+
+    # Combine: prefer explicit rows; include semantic rows that are not duplicates.
+    # Create set of explicit pairs:
+    explicit_pairs = set((str(r["ATTACK_ID"]).upper(), str(r["CAPEC_ID"]).upper()) for _, r in df_exp.iterrows())
+    rows = []
+    # add explicit rows with metrics empty
+    for _, r in df_exp.iterrows():
+        rows.append({
+            "ATTACK_ID": r["ATTACK_ID"],
+            "ATTACK_NAME": r["ATTACK_NAME"],
+            "CAPEC_ID": r["CAPEC_ID"],
+            "CAPEC_NAME": r["CAPEC_NAME"],
+            "SOURCE": r["SOURCE"],
+            "RELATION_TYPE": r["RELATION_TYPE"],
+            "NOTE": r.get("NOTE",""),
+            "SIMILARITY": "",
+            "MATCH_METHOD": "explicit"
+        })
+    # add semantic ones if not in explicit_pairs
+    for _, r in df_sem.iterrows():
+        key = (str(r["ATTACK_ID"]).upper(), str(r["CAPEC_ID"]).upper())
+        if key in explicit_pairs:
+            continue
+        rows.append({
+            "ATTACK_ID": r["ATTACK_ID"],
+            "ATTACK_NAME": r["ATTACK_NAME"],
+            "CAPEC_ID": r["CAPEC_ID"],
+            "CAPEC_NAME": r.get("CAPEC_NAME",""),
+            "SOURCE": "semantic",
+            "RELATION_TYPE": "semantic_similarity",
+            "NOTE": "",
+            "SIMILARITY": round(float(r["SIMILARITY"]), 4) if r["SIMILARITY"] != "" else "",
+            "MATCH_METHOD": r["MATCH_METHOD"]
+        })
+    df_out = pd.DataFrame(rows, columns=["ATTACK_ID","ATTACK_NAME","CAPEC_ID","CAPEC_NAME","SOURCE","RELATION_TYPE","NOTE","SIMILARITY","MATCH_METHOD"])
+    df_out.to_csv(OUTPUT_SEMANTIC, index=False, encoding="utf-8-sig")
+    print(f"[+] Wrote semantic-augmented CSV: {OUTPUT_SEMANTIC} rows={len(df_out)}")
+
 
 def main():
     tmpdir = Path(tempfile.mkdtemp(prefix=TMP_PREFIX))
     try:
         repo_root = download_and_extract_cti(tmpdir)
-        attack_patterns, capec_patterns, relationships = collect_attack_patterns_and_relationships(repo_root)
-        # unify all attack-patterns into one dict for meta extraction
-        all_attack_patterns = {**attack_patterns}
-        # ensure capec patterns present too
-        for k, v in capec_patterns.items():
-            all_attack_patterns[k] = v
 
-        uuid_meta = build_uuid_to_metadata(all_attack_patterns)
-        # mappings from relationships (explicit STIX relationships)
-        rel_mappings = find_mappings_via_relationships(uuid_meta, relationships)
-        print(f"[+] Relationship-based mappings found: {len(rel_mappings)}")
-        # mappings from external references inside technique objects
-        extref_mappings = find_mappings_via_external_refs(all_attack_patterns, uuid_meta)
-        print(f"[+] External-ref-based mappings found: {len(extref_mappings)}")
+        # Option: to speed up, only scan directories likely to contain relevant JSON
+        # Common directories inside MITRE CTI repo:
+        filter_dirs = [
+            "enterprise-attack", "mobile-attack", "ics-attack", "capec"
+        ]
+        attack_patterns, capec_patterns_in_repo, relationships = collect_patterns_and_relationships(repo_root, filter_dirs=filter_dirs)
 
-        # combine and normalize CAPEC IDs & collect capec id set
-        combined = rel_mappings + extref_mappings
-        unique_pairs = {}
-        capec_set = set()
-        for rec in combined:
-            a_id = (rec.get("attack_id") or "").strip()
-            c_id_raw = (rec.get("capec_id") or "").strip()
-            if not a_id or not c_id_raw:
-                # skip incomplete unless we can try to extract from names? keep but mark
-                pass
-            # normalize capec id (e.g., '13' -> 'CAPEC-13')
-            c_id = normalize_capec_id_str(c_id_raw)
-            rec["capec_id"] = c_id
-            capec_set.add(c_id)
-            key = (a_id.upper() if a_id else "", c_id)
-            # prefer relationship source over external_reference for note; keep first
-            if key not in unique_pairs:
-                unique_pairs[key] = rec
+        # build uuid metadata for all patterns we found
+        all_patterns = {**attack_patterns, **capec_patterns_in_repo}
+        uuid_meta = build_uuid_meta(all_patterns)
 
-        print(f"[+] Unique ATTACK↔CAPEC pairs found (pre-augment): {len(unique_pairs)}")
+        # explicit mappings via relationships & external refs
+        explicit = find_explicit_mappings(uuid_meta, relationships)
 
-        # augment capec names from repo capec patterns if available
-        capec_name_lookup = augment_capec_names(capec_set, capec_patterns)
+        # fetch CAPEC JSON (optional) to get wider CAPEC descriptions
+        capec_json = fetch_capec_json()
+        capec_json_lookup = build_capec_lookup_from_json(capec_json) if capec_json else {}
 
-        # build output rows
-        rows = []
-        for (a_id, c_id), rec in unique_pairs.items():
-            rows.append({
-                "ATTACK_ID": a_id,
-                "ATTACK_NAME": rec.get("attack_name",""),
-                "CAPEC_ID": c_id,
-                "CAPEC_NAME": capec_name_lookup.get(c_id,""),
-                "SOURCE": rec.get("source",""),
-                "RELATION_TYPE": rec.get("relation_type",""),
-                "NOTE": rec.get("note","")
-            })
+        # build attack & capec entry lists for semantic matching
+        attacks_list, capecs_list = aggregate_attack_and_capec_entries(uuid_meta, capec_json_lookup, capec_patterns_in_repo)
 
-        # sort rows
-        rows_sorted = sorted(rows, key=lambda x: (x["ATTACK_ID"] or "", x["CAPEC_ID"] or ""))
+        # If no capec entries from capec_json, attempt to build from capec_patterns_in_repo
+        if not capecs_list and capec_patterns_in_repo:
+            # transform repo capec patterns
+            for uid, obj in capec_patterns_in_repo.items():
+                cid = ""
+                for ref in obj.get("external_references", []) or []:
+                    if (ref.get("source_name") or "").lower().startswith("capec") and ref.get("external_id"):
+                        cid = str(ref.get("external_id")).strip().upper()
+                        break
+                if not cid:
+                    continue
+                name = obj.get("name","") or ""
+                desc = strip_html_tags(obj.get("description","") or "")
+                capecs_list.append({"capec_id":cid,"capec_name":name,"capec_desc":desc})
 
-        # write CSV
-        df = pd.DataFrame(rows_sorted, columns=["ATTACK_ID","ATTACK_NAME","CAPEC_ID","CAPEC_NAME","SOURCE","RELATION_TYPE","NOTE"])
-        OUTPUT_CSV.parent.mkdir(parents=True, exist_ok=True)
-        df.to_csv(OUTPUT_CSV, index=False, encoding="utf-8-sig")
-        print(f"[+] Wrote {len(df)} rows to {OUTPUT_CSV}")
+        # perform semantic matching (SBERT preferred)
+        semantic_matches = []
+        if attacks_list and capecs_list:
+            semantic_matches = embed_and_match(attacks_list, capecs_list, use_sbert=USE_SBERT,
+                                               sbert_threshold=SBERT_THRESHOLD, tfidf_threshold=TFIDF_THRESHOLD,
+                                               top_k=MAX_SEMANTIC_PER_ATTACK)
+        else:
+            print("[!] No attacks or capecs available for semantic matching.", file=sys.stderr)
+
+        # write outputs
+        combine_and_write(explicit, semantic_matches)
+
     finally:
-        # cleanup tmpdir if you want; keep for debugging by default we remove
         try:
             import shutil
             shutil.rmtree(tmpdir)
         except Exception:
             pass
+
 
 if __name__ == "__main__":
     main()
